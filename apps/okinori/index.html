@@ -515,7 +515,7 @@
     </div>
 
     <div class="frame-wrap">
-      <iframe class="app-frame" id="app-frame" src="app.html?v=20260406spacing" title="OKINORI" allow="autoplay"></iframe>
+      <iframe class="app-frame" id="app-frame" src="app.html?v=PATTERNS8_SAVE_RNDOCT" title="OKINORI" allow="autoplay"></iframe>
       <div class="status-pill" id="status-pill"></div>
     </div>
   </div>
@@ -653,6 +653,18 @@
 
       // Set CSS variable on topbar root - all buttons inherit automatically
       topbar.style.setProperty('--track-color', trackColor);
+
+      // Update GEN button color if it's active for the current track
+      const genBtn = document.getElementById('gen-btn');
+      if (genBtn && generativeMode[currentTrack]) {
+        genBtn.style.background = trackColor;
+        genBtn.style.color = 'var(--bg)';
+        genBtn.style.borderColor = trackColor;
+      } else if (genBtn) {
+        genBtn.style.background = 'transparent';
+        genBtn.style.color = trackColor;
+        genBtn.style.borderColor = trackColor;
+      }
     }
 
     function setMainSurfaceMode(mode) {
@@ -4389,6 +4401,10 @@
           border-color: var(--current-track-color, var(--app-line)) !important;
           background: var(--app-bg) !important;
         }
+        .grid-cell.dimmed-by-length {
+          opacity: 0.3 !important;
+        }
+
         .sequencer-cell, .grid-cell {
           border-color: var(--app-grid-line) !important;
           background: var(--app-cell-bg) !important;
@@ -5114,14 +5130,14 @@
         const topPadding = isFirst ? '12px' : '3px';
         const bottomPadding = isLast ? '12px' : '3px';
         return `
-          <div class="module-card" style="min-height: 0 !important; gap: 2px !important; padding: ${topPadding} 0 ${bottomPadding} 0;">
-            <div class="module-label" style="font-size: 10px;">${label}</div>
-            <div style="display: flex; align-items: center; gap: 16px; width: 100%; padding-right: 40px;">
-              <button class="trk-cont-btn" style="width: 24px; height: 24px; min-width: 24px; border: 2px solid currentColor; background: transparent; color: currentColor; font: 700 10px 'Space Mono', monospace; cursor: pointer; padding: 0;"></button>
+          <div class="module-card" style="min-height: 0 !important; gap: 2px !important; padding: ${topPadding} 0 ${bottomPadding} 0; padding-left: 12px;">
+            <div class="module-label" style="font-size: 10px; text-align: left;">${label}</div>
+            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
               <div class="module-slider-wrap" data-value="${value}" data-min="${min}" data-max="${max}" style="flex: 1;">
                 <div class="module-slider-fill" style="width: ${ratio * 100}%"></div>
                 <div class="module-slider-thumb" style="left: ${ratio * 100}%"></div>
               </div>
+              <div class="module-readout" style="min-width: 50px; text-align: right;">${readout}</div>
             </div>
           </div>
         `;
@@ -5362,13 +5378,35 @@
           const fill = sliderWrap.querySelector('.module-slider-fill');
           const thumb = sliderWrap.querySelector('.module-slider-thumb');
 
-          const updateVisual = (value) => {
+          const updateVisual = (value, skipStoreUpdate = false) => {
             const ratio = (value - min) / (max - min);
             fill.style.width = `${ratio * 100}%`;
             thumb.style.left = `${ratio * 100}%`;
             if (readout) {
-              const displayValue = Math.abs(value) < 1 ? value.toFixed(2) : Math.round(value);
+              const label = card?.querySelector('.module-label')?.textContent || '';
+              let displayValue;
+              let paramName = label.toLowerCase();
+
+              if (label === 'DIRECTION') {
+                const dirs = ['FWD', 'REV', 'PEND', 'RAND'];
+                displayValue = dirs[Math.round(value)] || 'FWD';
+              } else if (label === 'TIME') {
+                const ratios = ['1:8', '1:6', '1:4', '1:3', '1:2', '2:3', '1:1', '3:2', '2:1', '3:1', '4:1', '6:1', '8:1'];
+                displayValue = ratios[Math.round(value)] || '1:1';
+              } else if (label === 'SWING') {
+                displayValue = Math.round(value) + '%';
+              } else {
+                displayValue = Math.abs(value) < 1 ? value.toFixed(2) : Math.round(value);
+              }
+
               readout.textContent = displayValue;
+
+              // Update track control storage
+              if (!skipStoreUpdate && typeof setTrackControl === 'function') {
+                const win = getInnerWin();
+                const instrument = win?.sequencer?.currentInstrument || win?.synthEngine?.currentInstrument || 'synth';
+                setTrackControl(instrument, paramName, Math.round(value));
+              }
             }
           };
 
@@ -5385,14 +5423,16 @@
             }
             lastClickTime = now;
 
-            const startX = e.clientX;
-            const startVal = currentVal;
-
             const move = (ev) => {
               const rect = sliderWrap.getBoundingClientRect();
-              const deltaRatio = (ev.clientX - startX) / rect.width;
-              let value = startVal + deltaRatio * (max - min);
+              const x = Math.max(0, Math.min(rect.width, ev.clientX - rect.left));
+              const ratio = x / rect.width;
+              let value = min + ratio * (max - min);
               value = Math.min(max, Math.max(min, value));
+
+              // Round to integer for discrete sliders
+              value = Math.round(value);
+
               currentVal = value;
               sliderWrap.dataset.value = value;
               updateVisual(value);
@@ -5402,6 +5442,9 @@
               doc.removeEventListener("mousemove", move);
               doc.removeEventListener("mouseup", up);
             };
+
+            // Immediately jump to clicked position
+            move(e);
 
             doc.addEventListener("mousemove", move);
             doc.addEventListener("mouseup", up);
@@ -5718,18 +5761,22 @@
 
       function renderModuleTabs() {
         let currentPattern = 1;
-        let patternMode = 'normal'; // 'normal', 'dup', 'clear'
+        let patternMode = 'normal'; // 'normal', 'dup', 'clear', 'save'
         let patternPendingDelete = null; // Track pattern pending deletion (requires second click)
         let sourcePatternForDup = null; // Track source pattern for DUP mode
+        let sourcePatternForSave = null; // Track source pattern for SAVE mode
 
         // Sync with global mode
         function syncGlobalMode() {
           globalPatternMode = patternMode;
         }
 
+        // ⚠️ IMPORTANT: Pattern grid buttons are DYNAMICALLY CREATED from this array
+        // This is the 5x2 grid shown in the EDIT panel (left side)
+        // NOT the pattern buttons in app.html (those are old/unused)
         const patternButtons = [
-          '1', '2', '3', '4', '5',
-          '6', '7', '8', '9', '10'
+          '1', '2', '3', '4', 'SAVE',
+          '5', '6', '7', '8', 'RND OCT'
         ];
         const controlTabs = [
           ['dup','DUP'],
@@ -5755,11 +5802,26 @@
 
         function updatePatternVisuals() {
           moduleTabsSticky.querySelectorAll('.pattern-tab').forEach(btn => {
-            const num = parseInt(btn.dataset.pattern);
+            const patternValue = btn.dataset.pattern;
+
+            // Skip special buttons (SAVE, RND OCT) - they don't participate in visual updates
+            if (patternValue === 'SAVE' || patternValue === 'RND OCT') {
+              // Keep original text
+              btn.textContent = patternValue;
+              // Add mode class if in save mode for SAVE button
+              if (patternValue === 'SAVE' && patternMode === 'save') {
+                btn.classList.add('is-active');
+              } else {
+                btn.classList.remove('is-active', 'has-data', 'dup-mode', 'clear-mode', 'is-source', 'pending-delete', 'source-selected');
+              }
+              return;
+            }
+
+            const num = parseInt(patternValue);
             const isActive = num === currentPattern;
             const hasSaved = patternHasData(num);
             const isPendingDelete = num === patternPendingDelete;
-            const isSource = num === sourcePatternForDup;
+            const isSource = num === sourcePatternForDup || num === sourcePatternForSave;
 
             // Remove all state classes
             btn.classList.remove('is-active', 'has-data', 'dup-mode', 'clear-mode', 'is-source', 'pending-delete', 'source-selected');
@@ -5788,6 +5850,14 @@
                 btn.classList.add('source-selected');
               }
               // Don't show active state in dup mode
+            } else if (patternMode === 'save') {
+              btn.classList.add('dup-mode'); // Use same visual style as dup mode
+              if (isSource) {
+                btn.classList.add('is-source');
+              }
+              if (sourcePatternForSave !== null) {
+                btn.classList.add('source-selected');
+              }
             } else {
               // Only show active state in normal mode
               if (isActive) btn.classList.add('is-active');
@@ -5819,9 +5889,78 @@
           // Don't set initial active class here - let updatePatternVisuals handle it
 
           btn.addEventListener('click', () => {
+            // Handle special buttons (SAVE, RND OCT)
+            if (num === 'SAVE') {
+              // Enter SAVE mode (like DUP mode)
+              if (patternMode !== 'save') {
+                patternMode = 'save';
+                sourcePatternForSave = null;
+                syncGlobalMode();
+                updatePatternVisuals();
+              }
+              return;
+            }
+
+            if (num === 'RND OCT') {
+              // Randomize octave values for all notes on current track's grid
+              const win = getInnerWin();
+              if (win?.sequencer) {
+                const currentInstrument = currentTrack;
+                const track = win.sequencer.sequencerTracks[currentInstrument];
+
+                for (let i = 0; i < 384; i++) {
+                  if (track[i] > 0) {
+                    // Randomize octave (1-5) for existing notes only
+                    track[i] = Math.floor(Math.random() * 5) + 1;
+                  }
+                }
+
+                win.sequencer.grid.createGrid();
+                win.sequencer.memory.savePatternWithUI(win.sequencer.currentPatternIndex);
+
+                // Flash button
+                btn.classList.add('flash');
+                setTimeout(() => btn.classList.remove('flash'), 300);
+              }
+              return;
+            }
+
             const targetPattern = parseInt(num);
 
-            if (patternMode === 'dup') {
+            if (patternMode === 'save') {
+              // Two-click SAVE: first click selects source, second click saves to target
+              if (sourcePatternForSave === null) {
+                // First click - select current pattern as source
+                sourcePatternForSave = currentPattern;
+                updatePatternVisuals();
+              } else {
+                // Second click - save to target slot
+                const win = getInnerWin();
+                if (win && win.sequencer && win.sequencer.memory) {
+                  const sourceIndex = sourcePatternForSave - 1;
+                  const targetIndex = targetPattern - 1;
+
+                  // Deep clone the source pattern
+                  const sourceData = win.sequencer.memory.patternMemory[sourceIndex];
+                  if (sourceData) {
+                    win.sequencer.memory.patternMemory[targetIndex] = structuredClone(sourceData);
+
+                    // Switch to the target pattern
+                    currentPattern = targetPattern;
+                    win.sequencer.currentPatternIndex = targetIndex;
+                    win.sequencer.memory.loadPattern(targetIndex);
+
+                    // Flash animation
+                    btn.classList.add('flash-copy');
+                    setTimeout(() => btn.classList.remove('flash-copy'), 300);
+                  }
+                }
+                // Exit save mode
+                sourcePatternForSave = null;
+                updatePatternVisuals();
+                exitPatternMode();
+              }
+            } else if (patternMode === 'dup') {
               // Two-click DUP: first click selects source, second click copies to target
               if (sourcePatternForDup === null) {
                 // First click - select source pattern to copy from
@@ -6144,15 +6283,174 @@
       // Set global reference for buttons to access
       globalOpenModule = openModule;
 
+      // Track control storage (per instrument) - 4 instruments only
+      const trackControls = {
+        synth: { length: 32, direction: 0, time: 6, offset: 0, swing: 50, octave: 0 },
+        bass: { length: 32, direction: 0, time: 6, offset: 0, swing: 50, octave: 0 },
+        keys: { length: 32, direction: 0, time: 6, offset: 0, swing: 50, octave: 0 },
+        lead: { length: 32, direction: 0, time: 6, offset: 0, swing: 50, octave: 0 }
+      };
+
+      // Expose to iframe
+      function getTrackControls(instrument) {
+        return trackControls[instrument] || trackControls.synth;
+      }
+
+      function setTrackControl(instrument, param, value) {
+        if (trackControls[instrument]) {
+          trackControls[instrument][param] = value;
+          // Call INTO the iframe to update its grid
+          const innerWin = getInnerWin();
+          if (innerWin?.updateLengthDimming) {
+            innerWin.updateLengthDimming();
+          }
+        }
+      }
+
+      // Function to refresh slider displays when instrument changes
+      function refreshTrackSliders(instrument) {
+        const controls = trackControls[instrument];
+        if (!controls) return;
+
+        const doc = getInnerDoc();
+        if (!doc) return;
+
+        // Update each slider to show current instrument's values
+        doc.querySelectorAll('.module-slider-wrap').forEach(sliderWrap => {
+          const card = sliderWrap.closest('.module-card');
+          const label = card?.querySelector('.module-label')?.textContent || '';
+          const paramName = label.toLowerCase();
+
+          if (controls.hasOwnProperty(paramName)) {
+            const value = controls[paramName];
+            sliderWrap.dataset.value = value;
+
+            // Update visual (fill, thumb, readout)
+            const min = parseFloat(sliderWrap.dataset.min || 0);
+            const max = parseFloat(sliderWrap.dataset.max || 100);
+            const ratio = (value - min) / (max - min);
+
+            const fill = sliderWrap.querySelector('.module-slider-fill');
+            const thumb = sliderWrap.querySelector('.module-slider-thumb');
+            const readout = card?.querySelector('.module-readout');
+
+            if (fill) fill.style.width = `${ratio * 100}%`;
+            if (thumb) thumb.style.left = `${ratio * 100}%`;
+
+            if (readout) {
+              let displayValue;
+              if (label === 'DIRECTION') {
+                const dirs = ['FWD', 'REV', 'PEND', 'RAND'];
+                displayValue = dirs[Math.round(value)] || 'FWD';
+              } else if (label === 'TIME') {
+                const ratios = ['1:8', '1:6', '1:4', '1:3', '1:2', '2:3', '1:1', '3:2', '2:1', '3:1', '4:1', '6:1', '8:1'];
+                displayValue = ratios[Math.round(value)] || '1:1';
+              } else if (label === 'SWING') {
+                displayValue = Math.round(value) + '%';
+              } else {
+                displayValue = Math.abs(value) < 1 ? value.toFixed(2) : Math.round(value);
+              }
+              readout.textContent = displayValue;
+            }
+          }
+        });
+      }
+
+      // Make accessible globally
+      window.getTrackControls = getTrackControls;
+      window.setTrackControl = setTrackControl;
+      window.refreshTrackSliders = refreshTrackSliders;
+
+      function loadSliderValuesForInstrument(instrument) {
+        const controls = trackControls[instrument] || trackControls.synth;
+        const doc = getInnerDoc();
+        if (!doc) return;
+
+        // Update each slider to match the current instrument's values
+        const sliders = doc.querySelectorAll('.module-slider-wrap');
+        sliders.forEach(sliderWrap => {
+          const card = sliderWrap.closest('.module-card');
+          if (!card) return;
+
+          const label = card.querySelector('.module-label')?.textContent || '';
+          const paramName = label.toLowerCase();
+
+          if (controls[paramName] !== undefined) {
+            const value = controls[paramName];
+            sliderWrap.dataset.value = value;
+
+            // Trigger visual update
+            const event = new MouseEvent('mousedown', { bubbles: true, clientX: 0 });
+            sliderWrap.dispatchEvent(event);
+            const upEvent = new MouseEvent('mouseup', { bubbles: true });
+            document.dispatchEvent(upEvent);
+
+            // Directly update visuals
+            const min = parseFloat(sliderWrap.dataset.min || 0);
+            const max = parseFloat(sliderWrap.dataset.max || 100);
+            const ratio = (value - min) / (max - min);
+            const fill = sliderWrap.querySelector('.module-slider-fill');
+            const thumb = sliderWrap.querySelector('.module-slider-thumb');
+            const readout = card.querySelector('.module-readout');
+
+            if (fill) fill.style.width = `${ratio * 100}%`;
+            if (thumb) thumb.style.left = `${ratio * 100}%`;
+
+            if (readout) {
+              let displayValue;
+              if (label === 'DIRECTION') {
+                const dirs = ['FWD', 'REV', 'PEND', 'RAND'];
+                displayValue = dirs[value] || 'FWD';
+              } else if (label === 'TIME') {
+                const ratios = ['1:8', '1:6', '1:4', '1:3', '1:2', '2:3', '1:1', '3:2', '2:1', '3:1', '4:1', '6:1', '8:1'];
+                displayValue = ratios[value] || '1:1';
+              } else if (label === 'SWING') {
+                displayValue = value + '%';
+              } else {
+                displayValue = value;
+              }
+              readout.textContent = displayValue;
+            }
+          }
+        });
+      }
+
+      // Watch for instrument changes and keep grid visuals updated
+      let lastInstrument = 'synth';
+      let createGridHooked = false;
+
+      let updateInterval = setInterval(() => {
+        const win = getInnerWin();
+        const currentInstrument = win?.sequencer?.activeInstrument || 'synth';
+        if (currentInstrument !== lastInstrument) {
+          lastInstrument = currentInstrument;
+          loadSliderValuesForInstrument(currentInstrument);
+        }
+        // Always update grid visuals to maintain dimming
+        updateGridVisuals();
+
+        // Hook into createGrid once it's available
+        if (!createGridHooked && win?.sequencer?.grid?.createGrid) {
+          const originalCreateGrid = win.sequencer.grid.createGrid;
+          win.sequencer.grid.createGrid = function(...args) {
+            const result = originalCreateGrid.apply(this, args);
+            // Re-apply dimming immediately after grid recreation
+            setTimeout(() => updateGridVisuals(), 10);
+            return result;
+          };
+          createGridHooked = true;
+        }
+      }, 50); // Faster polling to catch grid recreation
+
       // Initialize track sliders (always visible)
       if (trackSlidersPanel) {
         trackSlidersPanel.innerHTML = `
           <div class="module-grid" style="grid-template-columns: 1fr;">
             ${createTrkContSlider('LENGTH', 32, 1, 32, '32', true, false)}
-            ${createTrkContSlider('PROBABILITY', 100, 0, 100, '100%', false, false)}
             ${createTrkContSlider('DIRECTION', 0, 0, 3, 'FWD', false, false)}
-            ${createTrkContSlider('DIVISION', 4, 1, 16, '4', false, false)}
-            ${createTrkContSlider('DELAY', 0, 0, 100, '0ms', false, false)}
+            ${createTrkContSlider('TIME', 6, 0, 12, '1:1', false, false)}
+            ${createTrkContSlider('OFFSET', 0, 0, 31, '0', false, false)}
+            ${createTrkContSlider('SWING', 50, 0, 100, '50%', false, false)}
             ${createTrkContSlider('OCTAVE', 0, -2, 2, '0', false, true)}
           </div>
         `;
@@ -6600,18 +6898,16 @@
     }
 
     function resetTrigValues(sequencer) {
-      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
-      instruments.forEach(instrument => {
-        for (let i = 0; i < 384; i++) {
-          // Only reset active steps
-          if (sequencer.sequencerTracks[instrument][i] > 0) {
-            sequencer.retrigTracks[instrument][i] = 1;
-          }
+      // Per-track reset (only current track)
+      const currentInstrument = currentTrack;
+      for (let i = 0; i < 384; i++) {
+        // Only reset active steps
+        if (sequencer.sequencerTracks[currentInstrument][i] > 0) {
+          sequencer.retrigTracks[currentInstrument][i] = 1;
         }
-      });
+      }
       sequencer.grid.createGrid();
       sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
-      console.log('🔄 Reset all TRIG values to 1 on active steps');
     }
 
     function randomizeProbValues(sequencer) {
@@ -6631,18 +6927,31 @@
     }
 
     function resetProbValues(sequencer) {
-      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
-      instruments.forEach(instrument => {
-        for (let i = 0; i < 384; i++) {
-          // Only reset active steps
-          if (sequencer.sequencerTracks[instrument][i] > 0) {
-            sequencer.probTracks[instrument][i] = 100;
-          }
+      // Per-track reset (only current track)
+      const currentInstrument = currentTrack;
+      for (let i = 0; i < 384; i++) {
+        // Only reset active steps
+        if (sequencer.sequencerTracks[currentInstrument][i] > 0) {
+          sequencer.probTracks[currentInstrument][i] = 100;
         }
-      });
+      }
       sequencer.grid.createGrid();
       sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
-      console.log('🔄 Reset all PROB values to 100% on active steps');
+    }
+
+    function resetGridPattern(sequencer) {
+      // Per-track reset: clear grid, reset trigs to 1, reset probs to 100, reset octaves
+      const currentInstrument = currentTrack;
+      const track = sequencer.sequencerTracks[currentInstrument];
+
+      for (let i = 0; i < 384; i++) {
+        track[i] = 0; // Clear all notes
+        sequencer.retrigTracks[currentInstrument][i] = 1;
+        sequencer.probTracks[currentInstrument][i] = 100;
+      }
+
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
     }
 
     // Expose to window so iframe can call it
@@ -6650,13 +6959,19 @@
       const currentInstrument = currentTrack;
       const track = sequencer.sequencerTracks[currentInstrument];
 
+      // Safety check - if track doesn't exist, bail out
+      if (!track) {
+        showStatus(`⚠️ Can't randomize - no track data for ${currentInstrument}`);
+        return;
+      }
+
       // Use density to control fill percentage
-      // density 1 (1 button lit) = 5-10% sparse
-      // density 2 (2 buttons lit) = 15-25% medium
-      // density 3 (3 buttons lit) = 30-40% dense/chaotic
+      // density 1 (1 button lit) = 8-12% sparse (30-46 steps)
+      // density 2 (2 buttons lit) = 15-25% medium (58-96 steps)
+      // density 3 (3 buttons lit) = 30-40% dense/chaotic (115-154 steps)
       let fillPercentage;
       if (rndDensity === 1) {
-        fillPercentage = 0.05 + Math.random() * 0.05; // 5-10%
+        fillPercentage = 0.08 + Math.random() * 0.04; // 8-12%
       } else if (rndDensity === 2) {
         fillPercentage = 0.15 + Math.random() * 0.1; // 15-25%
       } else {
@@ -6665,11 +6980,13 @@
 
       const numSteps = Math.floor(384 * fillPercentage);
 
-      // SAFETY: Ensure we ALWAYS add at least some notes (minimum 5 steps)
-      const minSteps = Math.max(numSteps, 5);
+      // SAFETY: Ensure we ALWAYS add enough notes to be audible (minimum 30 steps)
+      const minSteps = Math.max(numSteps, 30);
 
       // Pick one random octave value for the whole pattern (mono - no chords)
-      const octaveValue = Math.floor(Math.random() * 5); // 0-4 octave values
+      // Must be 1-5 (not 0!) because playback checks "if (stepValue > 0)"
+      // Using 2-4 for musically pleasing range (avoids too high/too low)
+      const octaveValue = Math.floor(Math.random() * 3) + 2; // 2-4 octave values
 
       // Clear current track
       for (let i = 0; i < 384; i++) {
@@ -6693,7 +7010,14 @@
 
       sequencer.grid.createGrid();
       sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
-      console.log('🎲 Randomized GRID pattern for', currentInstrument, '- density:', rndDensity, 'octave:', octaveValue, 'steps:', minSteps);
+
+      // Flash the current track button to show regeneration
+      const trackButtons = document.querySelectorAll('.track-btn');
+      const trackIndex = ['synth', 'bass', 'keys', 'lead'].indexOf(currentInstrument);
+      if (trackButtons[trackIndex]) {
+        trackButtons[trackIndex].classList.add('flash');
+        setTimeout(() => trackButtons[trackIndex].classList.remove('flash'), 300);
+      }
     };
 
     function randomizeAllSound() {
@@ -6808,40 +7132,88 @@
     //   clickInner('random-button');
     // });
 
-    genBtn.addEventListener('click', () => {
+    let genBtnHoldTimer = null;
+
+    genBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault(); // Prevent click from firing immediately
       const win = getInnerWin();
       if (!win?.sequencer) return;
 
-      const track = currentTrack; // Current track name (synth/bass/keys/lead)
-
-      // Toggle generative mode for this track
-      generativeMode[track] = !generativeMode[track];
-      genBtn.classList.toggle('is-active', generativeMode[track]);
-
-      // Apply track color directly to this button
+      const track = currentTrack;
       const trackColor = TRACK_COLORS[currentTrackNumber]?.color || '#ff5a65';
-      if (generativeMode[track]) {
+
+      // Immediate visual feedback
+      genBtn.style.transform = 'scale(0.95)';
+
+      // Immediate action: Generate pattern once
+      randomizeGridPattern(win.sequencer);
+
+      // Flash animation
+      genBtn.style.background = trackColor;
+      genBtn.style.color = 'var(--bg)';
+      setTimeout(() => {
+        if (!generativeMode[track]) {
+          genBtn.style.background = 'transparent';
+          genBtn.style.color = trackColor;
+        }
+      }, 200);
+
+      // Start hold timer for activating continuous mode
+      genBtnHoldTimer = setTimeout(() => {
+        // After 1 second hold, activate generative mode (stay red)
+        generativeMode[track] = true;
+        genBtn.classList.add('is-active');
         genBtn.style.background = trackColor;
         genBtn.style.color = 'var(--bg)';
         genBtn.style.borderColor = trackColor;
 
-        // Generate initial pattern immediately
-        randomizeGridPattern(win.sequencer);
+        // Store generative state
+        win.__generativeMode = generativeMode;
+        window.__generativeMode = generativeMode;
 
         showStatus(`GENERATIVE MODE ON - ${track.toUpperCase()}`);
-      } else {
+      }, 1000); // 1 second hold
+    });
+
+    genBtn.addEventListener('mouseup', () => {
+      // Reset scale
+      genBtn.style.transform = 'scale(1)';
+
+      // Clear hold timer if released before 1 second
+      if (genBtnHoldTimer) {
+        clearTimeout(genBtnHoldTimer);
+        genBtnHoldTimer = null;
+      }
+    });
+
+    genBtn.addEventListener('mouseleave', () => {
+      // Clear hold timer if mouse leaves button
+      if (genBtnHoldTimer) {
+        clearTimeout(genBtnHoldTimer);
+        genBtnHoldTimer = null;
+      }
+    });
+
+    genBtn.addEventListener('click', () => {
+      const win = getInnerWin();
+      if (!win?.sequencer) return;
+
+      const track = currentTrack;
+      const trackColor = TRACK_COLORS[currentTrackNumber]?.color || '#ff5a65';
+
+      // If already in generative mode, clicking turns it OFF
+      if (generativeMode[track]) {
+        generativeMode[track] = false;
+        genBtn.classList.remove('is-active');
         genBtn.style.background = 'transparent';
         genBtn.style.color = trackColor;
         genBtn.style.borderColor = trackColor;
 
+        win.__generativeMode = generativeMode;
+        window.__generativeMode = generativeMode;
+
         showStatus(`GENERATIVE MODE OFF - ${track.toUpperCase()}`);
       }
-
-      // Store generative state in the iframe so it persists
-      win.__generativeMode = generativeMode;
-
-      // Also expose to parent window for iframe to access
-      window.__generativeMode = generativeMode;
     });
 
     recBtn.addEventListener('click', () => {

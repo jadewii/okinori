@@ -2792,7 +2792,7 @@ body.jamnutz-light .drum-pad-button.active {
     }
 
     // Use provided startTime or current time for immediate playback
-    const scheduleTime = startTime !== null ? startTime : this.audioContext.currentTime + 0.01; // Add 10ms buffer to prevent audio pop
+    const scheduleTime = startTime !== null ? startTime : this.audioContext.currentTime;
 
     // Resolve instrument explicitly - use override if provided, otherwise use currentInstrument
     const instrument = instrumentOverride || this.currentInstrument;
@@ -4695,6 +4695,25 @@ body.jamnutz-light .drum-pad-button.active {
       sequencerGrid.appendChild(fragment);
       sequencerGrid.classList.remove("drum-grid", "drum-machine-grid");
       sequencerGrid.classList.add("sequence-grid", "instrument-grid");
+
+      // Apply length dimming after grid is created
+      this.updateLengthDimming();
+    }
+    updateLengthDimming() {
+      // Get current instrument's length setting from parent window
+      const currentInstrument = this.sequencer?.currentInstrument || 'synth';
+      const controls = window.parent?.getTrackControls?.(currentInstrument);
+
+      if (!controls) return;
+
+      // Dim all cells beyond the length setting
+      const cells = document.querySelectorAll('.grid-cell');
+      cells.forEach((cell, idx) => {
+        const col = idx % 32;
+        const shouldBeDimmed = col >= controls.length;
+
+        cell.classList.toggle('dimmed-by-length', shouldBeDimmed);
+      });
     }
     updateGridRetrigVisuals() {
       const currentInstrument = this.sequencer.currentInstrument;
@@ -6388,6 +6407,10 @@ body.jamnutz-light .drum-pad-button.active {
       this.grid.createGrid();
       this.updateDirectionButtonColors(instrument);
       this.updateDirectionButtonStates();
+      // Update slider UI after grid recreates
+      if (window.parent?.refreshTrackSliders) {
+        window.parent.refreshTrackSliders(instrument);
+      }
     }
     updateDirectionButtonColors(instrument) {
       const directionButtons = document.querySelectorAll(".direction-button");
@@ -6663,6 +6686,15 @@ function exportOkinoriMidi() {
     const sequencer = new sequencer_default(synthEngine);
     window.synthEngine = synthEngine;
     window.keyboard = keyboard;
+    window.sequencer = sequencer;
+
+    // Expose length dimming function so parent can call it
+    window.updateLengthDimming = function() {
+      if (sequencer?.grid?.updateLengthDimming) {
+        sequencer.grid.updateLengthDimming();
+      }
+    };
+
     ui.initUI();
     keyboard.setupKeyboard();
     keyboard.setupKeyboardEvents();
