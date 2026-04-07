@@ -1,0 +1,13 @@
+.app-library-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:18px;
+}
+.app-thumb{
+  border-radius:18px; aspect-ratio:16/10;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(157,252,107,.18), transparent 30%),
+    linear-gradient(180deg,#171b23,#0d1016);
+  border:1px solid rgba(255,255,255,.06);
+  padding:18px;
+}

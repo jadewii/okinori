@@ -56,9 +56,9 @@
     .topbar {
       display: grid;
       grid-template-columns: auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
-      gap: 8px;
+      gap: 2px !important;
       align-items: center;
-      padding: 8px 14px;
+      padding: 6px 10px !important;
       border-bottom: 2px solid var(--line);
       background: var(--bg);
       min-width: 0;
@@ -75,7 +75,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0 12px;
+      padding: 0 8px !important;
       text-transform: uppercase;
       white-space: nowrap;
     }
@@ -137,8 +137,8 @@
       height: 40px;
       justify-content: center;
       align-items: center;
-      margin-left: -4px; /* Pull closer to RND button */
-      margin-right: -8px; /* Pull even closer to RND, away from STP */
+      margin-left: 4px;
+      margin-right: 12px; /* Add more space before RST button */
     }
     .rnd-density-btn {
       width: 12px;
@@ -151,6 +151,68 @@
     }
     .rnd-density-btn.is-active {
       background: var(--current-track-color, var(--line));
+    }
+
+    .trig-prob-actions-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      height: 40px;
+      justify-content: center;
+      margin: 0 !important;
+    }
+    .trig-prob-action-btn {
+      background: transparent;
+      border: 2px solid var(--current-track-color, var(--line));
+      color: var(--current-track-color, var(--line));
+      padding: 2px 8px !important;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      height: 17px;
+      width: auto;
+      min-width: 45px;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .trig-prob-action-btn:hover {
+      background: var(--current-track-color, var(--line));
+      color: var(--bg);
+    }
+    .trig-prob-action-btn.is-active {
+      background: transparent;
+      border-color: var(--current-track-color, var(--line));
+      color: var(--current-track-color, var(--line));
+      animation: pulse-button 0.6s ease-in-out infinite;
+    }
+    .trig-prob-action-btn.flash {
+      background: var(--current-track-color, var(--line)) !important;
+      border-color: var(--current-track-color, var(--line)) !important;
+      color: var(--bg) !important;
+      animation: flash-outline 0.3s ease-out;
+    }
+    @keyframes pulse-button {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes flash-outline {
+      0% {
+        background: var(--current-track-color, var(--line));
+        color: var(--bg);
+      }
+      100% {
+        background: transparent;
+        color: var(--current-track-color, var(--line));
+      }
+    }
+
+    .square-btn.pulse-cue {
+      animation: pulse-button 0.6s ease-in-out infinite;
+      border-color: var(--current-track-color, var(--line));
     }
 
     /* Remove focus outline - keyboard should always stay with iframe */
@@ -249,9 +311,8 @@
       content: "✓"; position: absolute; left: 16px; top: 13px; font-size: 16px;
     }
     .wave-row, .pattern-row {
-      display: inline-flex; gap: 8px; align-items: center; flex-wrap: nowrap;
+      display: contents;
     }
-    .wave-row { min-width: 224px; justify-content: flex-start; }
     .pattern-btn { width: 100%; padding: 10px 14px; cursor: pointer; justify-content: flex-start; }
     .pattern-btn.is-active { background: #111; color: #fff; }
     .pattern-btn.is-dup { width: 100%; }
@@ -328,7 +389,44 @@
       display: none;
     }
     @media (max-width: 1400px) {
-      .topbar { grid-template-columns: repeat(8, auto) 1fr repeat(5, auto); overflow-x: auto; }
+      .topbar {
+        grid-template-columns: repeat(8, auto) 1fr repeat(5, auto);
+        overflow-x: auto;
+        gap: 2px !important;
+      }
+    }
+
+    /* FINAL TIGHT TOPBAR FIX - force grid columns to shrink to content */
+    .topbar {
+      grid-template-columns: repeat(auto-fit, minmax(0, max-content)) !important;
+      gap: 6px !important;
+      justify-content: flex-start !important;
+      padding: 6px 10px !important;
+    }
+
+    .topbar > * {
+      min-width: 0 !important;
+      width: auto !important;
+    }
+
+    .header-btn, .square-btn, .trig-prob-action-btn {
+      padding: 0 10px !important;
+    }
+
+    /* Add space between EDIT and GRID buttons */
+    #grid-btn {
+      margin-left: 24px !important;
+    }
+
+    /* Dashed outline for grid/trig/prob buttons when dice is waiting */
+    .waiting-for-selection {
+      border-style: dashed !important;
+      animation: pulse-waiting 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-waiting {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
   </style>
 </head>
@@ -341,12 +439,6 @@
 
       <button class="header-btn" data-role="play" id="play-toggle">PLAY</button>
       <button class="header-btn" data-role="generate" id="gen-btn">GEN</button>
-      <button class="header-btn" data-role="random" id="rnd-btn">RND</button>
-      <div class="rnd-density-wrap" id="rnd-density-wrap">
-        <button class="rnd-density-btn" data-density="3"></button>
-        <button class="rnd-density-btn" data-density="2"></button>
-        <button class="rnd-density-btn is-active" data-density="1"></button>
-      </div>
       <button class="header-btn" data-role="step-record" id="stp-btn">STP</button>
       <button class="header-btn" data-role="clear" id="x-btn">X</button>
       <button class="header-btn" data-role="overdub" id="dub-btn" style="display: none;">DUB</button>
@@ -367,22 +459,38 @@
       </div>
 
       <div class="wave-row" id="wave-row"></div>
-      <button class="square-btn" id="trig-btn">TRIG</button>
+      <button class="square-btn" id="edit-btn" style="min-width: 70px;">EDIT</button>
       <button class="square-btn" id="grid-btn" aria-label="Grid">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <rect x="1" y="1" width="4" height="4"/>
-          <rect x="6" y="1" width="4" height="4"/>
-          <rect x="11" y="1" width="4" height="4"/>
-          <rect x="1" y="6" width="4" height="4"/>
-          <rect x="6" y="6" width="4" height="4"/>
-          <rect x="11" y="6" width="4" height="4"/>
-          <rect x="1" y="11" width="4" height="4"/>
-          <rect x="6" y="11" width="4" height="4"/>
-          <rect x="11" y="11" width="4" height="4"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="0" y="0" width="7" height="7"/>
+          <rect x="8.5" y="0" width="7" height="7"/>
+          <rect x="17" y="0" width="7" height="7"/>
+          <rect x="0" y="8.5" width="7" height="7"/>
+          <rect x="8.5" y="8.5" width="7" height="7"/>
+          <rect x="17" y="8.5" width="7" height="7"/>
+          <rect x="0" y="17" width="7" height="7"/>
+          <rect x="8.5" y="17" width="7" height="7"/>
+          <rect x="17" y="17" width="7" height="7"/>
         </svg>
       </button>
+      <button class="square-btn" id="trig-btn">TRIG</button>
       <button class="square-btn" id="prob-btn">PROB</button>
-      <button class="square-btn" id="edit-btn">EDIT</button>
+      <button class="square-btn" id="random-trig-prob-btn" aria-label="Random">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+          <circle cx="3" cy="3" r="1.5"/>
+          <circle cx="17" cy="3" r="1.5"/>
+          <circle cx="3" cy="10" r="1.5"/>
+          <circle cx="17" cy="10" r="1.5"/>
+          <circle cx="3" cy="17" r="1.5"/>
+          <circle cx="17" cy="17" r="1.5"/>
+        </svg>
+      </button>
+      <div class="rnd-density-wrap" id="rnd-density-wrap-topbar">
+        <button class="rnd-density-btn" data-density="3"></button>
+        <button class="rnd-density-btn" data-density="2"></button>
+        <button class="rnd-density-btn is-active" data-density="1"></button>
+      </div>
+      <button class="square-btn" id="reset-trig-prob-btn">RST</button>
       <div class="dropdown" id="settings-dropdown">
         <button class="dropdown-trigger square-btn" data-role="settings" id="settings-trigger" type="button">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -407,7 +515,7 @@
     </div>
 
     <div class="frame-wrap">
-      <iframe class="app-frame" id="app-frame" src="app.html?v=20260405compact" title="OKINORI" allow="autoplay"></iframe>
+      <iframe class="app-frame" id="app-frame" src="app.html?v=20260406spacing" title="OKINORI" allow="autoplay"></iframe>
       <div class="status-pill" id="status-pill"></div>
     </div>
   </div>
@@ -435,7 +543,7 @@
     const frame = document.getElementById('app-frame');
     const statusPill = document.getElementById('status-pill');
     const playToggle = document.getElementById('play-toggle');
-    const rndBtn = document.getElementById('rnd-btn');
+    // const rndBtn = document.getElementById('rnd-btn'); // REMOVED - using dice/grid instead
     const genBtn = document.getElementById('gen-btn');
     const recBtn = document.getElementById('rec-btn');
     const stpBtn = document.getElementById('stp-btn');
@@ -447,6 +555,9 @@
     const gridBtn = document.getElementById('grid-btn');
     const editBtn = document.getElementById('edit-btn');
     const trigBtn = document.getElementById('trig-btn');
+    const probBtn = document.getElementById('prob-btn');
+    const randomTrigProbBtn = document.getElementById('random-trig-prob-btn');
+    const resetTrigProbBtn = document.getElementById('reset-trig-prob-btn');
     const scaleTrigger = document.getElementById('scale-trigger');
     const scaleCurrent = document.getElementById('scale-current');
     const scalePanel = document.getElementById('scale-panel');
@@ -478,7 +589,12 @@
     let overdubMode = false;         // false = clear pattern first, true = layer on top
     let stepPosition = 0;            // 0-31 for step record
     let patternBackup = null;        // For cancel/restore if needed
-    let generativeMode = false;      // Auto-generate new pattern at end of loop (per track)
+    let generativeMode = {           // Auto-generate new pattern at end of loop (per track)
+      synth: false,
+      bass: false,
+      keys: false,
+      lead: false
+    };
     let recordedNoteRange = { min: null, max: null }; // Track octave range during recording
 
     // Transport display mode - controls what visual feedback is shown
@@ -868,9 +984,9 @@
       // Update DUB button
       dubBtn.classList.toggle('is-overdub-on', overdubMode);
 
-      // Disable RND while recording
-      rndBtn.disabled = (recordState === 'armed' || recordState === 'recording');
-      rndBtn.style.opacity = rndBtn.disabled ? '0.5' : '1';
+      // Disable RND while recording - REMOVED (old RND button no longer exists)
+      // rndBtn.disabled = (recordState === 'armed' || recordState === 'recording');
+      // rndBtn.style.opacity = rndBtn.disabled ? '0.5' : '1';
     }
 
     function stopRecording() {
@@ -6096,9 +6212,9 @@
       updateFromInner();
       setTrack(currentTrack);
 
-      // Ensure RND button is enabled on load
-      rndBtn.disabled = false;
-      rndBtn.style.opacity = '1';
+      // Ensure RND button is enabled on load - REMOVED (old RND button no longer exists)
+      // rndBtn.disabled = false;
+      // rndBtn.style.opacity = '1';
 
       // Ensure CSS variable is set on load (both outer and inner document)
       const trackColor = TRACK_COLORS[currentTrackNumber];
@@ -6125,16 +6241,163 @@
       try { frame.contentWindow?.focus?.(); } catch {}
     });
 
-    gridBtn.addEventListener('click', () => setMainSurfaceMode('grid'));
-    editBtn.addEventListener('click', () => setMainSurfaceMode('edit'));
+    gridBtn.addEventListener('click', () => {
+      const win = getInnerWin();
+
+      console.log('🎮 GRID clicked - diceMode:', diceRandomizeMode, 'resetMode:', resetMode);
+
+      // If dice randomize mode is active, ALWAYS randomize (don't toggle mode off)
+      if (diceRandomizeMode) {
+        // Flash GRID button
+        gridBtn.classList.add('flash');
+        setTimeout(() => gridBtn.classList.remove('flash'), 300);
+
+        // Randomize the grid pattern
+        if (win?.sequencer) {
+          randomizeGridPattern(win.sequencer);
+        }
+        // IMPORTANT: Keep mode active - don't exit, don't toggle
+        return;
+      }
+
+      // If reset mode is active, ALWAYS clear (don't toggle mode off)
+      if (resetMode) {
+        // Flash GRID button
+        gridBtn.classList.add('flash');
+        setTimeout(() => gridBtn.classList.remove('flash'), 300);
+
+        // Clear the grid pattern for current track
+        if (win?.sequencer) {
+          const currentInstrument = currentTrack;
+          for (let i = 0; i < 384; i++) {
+            win.sequencer.sequencerTracks[currentInstrument][i] = 0;
+            win.sequencer.retrigTracks[currentInstrument][i] = 1;
+            win.sequencer.probTracks[currentInstrument][i] = 100;
+          }
+          win.sequencer.grid.createGrid();
+          win.sequencer.memory.savePatternWithUI(win.sequencer.currentPatternIndex);
+        }
+        // IMPORTANT: Keep mode active - don't exit, don't toggle
+        return;
+      }
+
+      // Normal GRID button behavior (not in any special mode)
+      // Just switch to grid view - DON'T clear or modify anything
+      console.log('🎮 Normal GRID mode - just switching view');
+
+      // Turn off TRIG mode if active
+      if (win?.sequencer?.trigMode) {
+        win.sequencer.trigMode = false;
+        trigBtn.classList.remove('is-active');
+      }
+
+      // Turn off PROB mode if active
+      if (win?.sequencer?.probMode) {
+        win.sequencer.probMode = false;
+        probBtn.classList.remove('is-active');
+      }
+
+      // Turn off EDIT button highlight
+      editBtn.classList.remove('is-active');
+
+      setMainSurfaceMode('grid');
+
+      // Refresh grid to remove TRIG/PROB visuals (but don't clear notes!)
+      if (win?.sequencer?.grid?.createGrid) {
+        win.sequencer.grid.createGrid();
+      }
+    });
+
+    editBtn.addEventListener('click', () => {
+      // If dice randomize mode is active, randomize all sound
+      if (diceRandomizeMode) {
+        // Flash button
+        editBtn.classList.add('flash');
+        setTimeout(() => editBtn.classList.remove('flash'), 300);
+
+        // Randomize all sound parameters
+        randomizeAllSound();
+        // Keep mode active - don't exit
+        return;
+      }
+
+      // If reset mode is active, reset all sound to neutral
+      if (resetMode) {
+        // Flash button
+        editBtn.classList.add('flash');
+        setTimeout(() => editBtn.classList.remove('flash'), 300);
+
+        // Reset all sound parameters to neutral
+        resetAllSound();
+        // Keep mode active - don't exit
+        return;
+      }
+
+      // Check if already in edit mode by checking the button's active state
+      if (editBtn.classList.contains('is-active')) {
+        // Already in edit mode, go back to grid
+        setMainSurfaceMode('grid');
+      } else {
+        // Switch to edit mode
+        setMainSurfaceMode('edit');
+      }
+    });
 
     // TRIG button handler - toggles retrig edit mode
     trigBtn.addEventListener('click', () => {
       const win = getInnerWin();
       if (!win?.sequencer) return;
 
+      // If dice randomize mode is active, activate TRIG mode and randomize (keep mode active)
+      if (diceRandomizeMode) {
+        // Flash TRIG button
+        trigBtn.classList.add('flash');
+        setTimeout(() => trigBtn.classList.remove('flash'), 300);
+
+        // Activate TRIG mode if not already active
+        setMainSurfaceMode('grid');
+        if (win.sequencer.probMode) {
+          win.sequencer.probMode = false;
+          probBtn.classList.remove('is-active');
+        }
+        win.sequencer.trigMode = true;
+        trigBtn.classList.add('is-active');
+
+        // Randomize TRIG values
+        randomizeTrigValues(win.sequencer);
+        // Keep dashed outlines visible - don't exit randomize mode
+        return;
+      }
+
+      // If reset mode is active, activate TRIG mode and reset values
+      if (resetMode) {
+        // Flash TRIG button
+        trigBtn.classList.add('flash');
+        setTimeout(() => trigBtn.classList.remove('flash'), 300);
+
+        // Activate TRIG mode if not already active
+        setMainSurfaceMode('grid');
+        if (win.sequencer.probMode) {
+          win.sequencer.probMode = false;
+          probBtn.classList.remove('is-active');
+        }
+        win.sequencer.trigMode = true;
+        trigBtn.classList.add('is-active');
+
+        // Reset TRIG values to 1
+        resetTrigValues(win.sequencer);
+        // Keep mode active - don't exit
+        return;
+      }
+
       // ALWAYS switch to grid mode first
       setMainSurfaceMode('grid');
+
+      // Turn off PROB mode if it's on (mutually exclusive)
+      if (win.sequencer.probMode) {
+        win.sequencer.probMode = false;
+        probBtn.classList.remove('is-active');
+      }
 
       // Toggle TRIG mode
       win.sequencer.trigMode = !win.sequencer.trigMode;
@@ -6150,6 +6413,361 @@
       }
     });
 
+    // PROB button handler - toggles probability edit mode
+    if (probBtn) {
+      probBtn.addEventListener('click', () => {
+        console.log('🎲 PROB button clicked');
+        const win = getInnerWin();
+        if (!win?.sequencer) {
+          console.log('❌ No sequencer found');
+          return;
+        }
+
+        // If dice randomize mode is active, activate PROB mode and randomize (keep mode active)
+        if (diceRandomizeMode) {
+          // Flash PROB button
+          probBtn.classList.add('flash');
+          setTimeout(() => probBtn.classList.remove('flash'), 300);
+
+          // Activate PROB mode if not already active
+          setMainSurfaceMode('grid');
+          if (win.sequencer.trigMode) {
+            win.sequencer.trigMode = false;
+            trigBtn.classList.remove('is-active');
+          }
+          win.sequencer.probMode = true;
+          probBtn.classList.add('is-active');
+
+          // Randomize PROB values
+          randomizeProbValues(win.sequencer);
+          // Keep dashed outlines visible - don't exit randomize mode
+          return;
+        }
+
+        // If reset mode is active, activate PROB mode and reset values
+        if (resetMode) {
+          // Flash PROB button
+          probBtn.classList.add('flash');
+          setTimeout(() => probBtn.classList.remove('flash'), 300);
+
+          // Activate PROB mode if not already active
+          setMainSurfaceMode('grid');
+          if (win.sequencer.trigMode) {
+            win.sequencer.trigMode = false;
+            trigBtn.classList.remove('is-active');
+          }
+          win.sequencer.probMode = true;
+          probBtn.classList.add('is-active');
+
+          // Reset PROB values to 100%
+          resetProbValues(win.sequencer);
+          // Keep mode active - don't exit
+          return;
+        }
+
+        // ALWAYS switch to grid mode first
+        setMainSurfaceMode('grid');
+
+        // Turn off TRIG mode if it's on (mutually exclusive)
+        if (win.sequencer.trigMode) {
+          win.sequencer.trigMode = false;
+          trigBtn.classList.remove('is-active');
+        }
+
+        // Toggle PROB mode
+        win.sequencer.probMode = !win.sequencer.probMode;
+        console.log('🎲 PROB mode now:', win.sequencer.probMode);
+
+        // Update button visual state
+        probBtn.classList.toggle('is-active', win.sequencer.probMode);
+
+        // Refresh grid to show probability visuals
+        if (win.sequencer.grid?.createGrid) {
+          win.sequencer.grid.createGrid();
+        }
+      });
+    } else {
+      console.log('❌ PROB button not found in DOM');
+    }
+
+    // Track if dice randomize mode is active
+    let diceRandomizeMode = false;
+    let resetMode = false;
+
+    // RANDOM and RESET button handlers - work based on active TRIG/PROB mode
+    randomTrigProbBtn.addEventListener('click', () => {
+      const win = getInnerWin();
+      if (!win?.sequencer) return;
+
+      // Toggle dice randomize mode
+      diceRandomizeMode = !diceRandomizeMode;
+
+      // Turn off reset mode if it was on
+      if (resetMode) {
+        resetMode = false;
+        resetTrigProbBtn.classList.remove('is-active');
+      }
+
+      if (diceRandomizeMode) {
+        // Entering randomize mode - show dashed outlines
+        editBtn.classList.add('waiting-for-selection');
+        gridBtn.classList.add('waiting-for-selection');
+        trigBtn.classList.add('waiting-for-selection');
+        probBtn.classList.add('waiting-for-selection');
+
+        // Change EDIT text to SOUND
+        editBtn.textContent = 'SOUND';
+
+        // Highlight dice button
+        randomTrigProbBtn.classList.add('is-active');
+
+        // Flash the dice button
+        randomTrigProbBtn.classList.add('flash');
+        setTimeout(() => randomTrigProbBtn.classList.remove('flash'), 300);
+      } else {
+        // Exiting randomize mode - remove dashed outlines
+        editBtn.classList.remove('waiting-for-selection');
+        gridBtn.classList.remove('waiting-for-selection');
+        trigBtn.classList.remove('waiting-for-selection');
+        probBtn.classList.remove('waiting-for-selection');
+
+        // Change SOUND text back to EDIT
+        editBtn.textContent = 'EDIT';
+
+        // Remove dice button highlight
+        randomTrigProbBtn.classList.remove('is-active');
+      }
+    });
+
+    resetTrigProbBtn.addEventListener('click', () => {
+      const win = getInnerWin();
+      if (!win?.sequencer) return;
+
+      // Toggle reset mode
+      resetMode = !resetMode;
+
+      // Turn off randomize mode if it was on
+      if (diceRandomizeMode) {
+        diceRandomizeMode = false;
+        randomTrigProbBtn.classList.remove('is-active');
+      }
+
+      if (resetMode) {
+        // Entering reset mode - show dashed outlines
+        editBtn.classList.add('waiting-for-selection');
+        gridBtn.classList.add('waiting-for-selection');
+        trigBtn.classList.add('waiting-for-selection');
+        probBtn.classList.add('waiting-for-selection');
+
+        // Change EDIT text to SOUND
+        editBtn.textContent = 'SOUND';
+
+        // Highlight reset button
+        resetTrigProbBtn.classList.add('is-active');
+
+        // Flash the reset button
+        resetTrigProbBtn.classList.add('flash');
+        setTimeout(() => resetTrigProbBtn.classList.remove('flash'), 300);
+      } else {
+        // Exiting reset mode - remove dashed outlines
+        editBtn.classList.remove('waiting-for-selection');
+        gridBtn.classList.remove('waiting-for-selection');
+        trigBtn.classList.remove('waiting-for-selection');
+        probBtn.classList.remove('waiting-for-selection');
+
+        // Change SOUND text back to EDIT
+        editBtn.textContent = 'EDIT';
+
+        // Remove reset button highlight
+        resetTrigProbBtn.classList.remove('is-active');
+      }
+    });
+
+
+    function randomizeTrigValues(sequencer) {
+      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
+      instruments.forEach(instrument => {
+        for (let i = 0; i < 384; i++) {
+          // Only randomize active steps
+          if (sequencer.sequencerTracks[instrument][i] > 0) {
+            sequencer.retrigTracks[instrument][i] = Math.floor(Math.random() * 4) + 1; // 1-4
+          }
+        }
+      });
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
+      console.log('🎲 Randomized all TRIG values (1-4) on active steps');
+    }
+
+    function resetTrigValues(sequencer) {
+      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
+      instruments.forEach(instrument => {
+        for (let i = 0; i < 384; i++) {
+          // Only reset active steps
+          if (sequencer.sequencerTracks[instrument][i] > 0) {
+            sequencer.retrigTracks[instrument][i] = 1;
+          }
+        }
+      });
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
+      console.log('🔄 Reset all TRIG values to 1 on active steps');
+    }
+
+    function randomizeProbValues(sequencer) {
+      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
+      const probValues = [25, 50, 75, 100];
+      instruments.forEach(instrument => {
+        for (let i = 0; i < 384; i++) {
+          // Only randomize active steps
+          if (sequencer.sequencerTracks[instrument][i] > 0) {
+            sequencer.probTracks[instrument][i] = probValues[Math.floor(Math.random() * probValues.length)];
+          }
+        }
+      });
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
+      console.log('🎲 Randomized all PROB values (25/50/75/100) on active steps');
+    }
+
+    function resetProbValues(sequencer) {
+      const instruments = ['synth', 'bass', 'keys', 'lead', 'pad', 'fx'];
+      instruments.forEach(instrument => {
+        for (let i = 0; i < 384; i++) {
+          // Only reset active steps
+          if (sequencer.sequencerTracks[instrument][i] > 0) {
+            sequencer.probTracks[instrument][i] = 100;
+          }
+        }
+      });
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
+      console.log('🔄 Reset all PROB values to 100% on active steps');
+    }
+
+    // Expose to window so iframe can call it
+    window.randomizeGridPattern = function(sequencer) {
+      const currentInstrument = currentTrack;
+      const track = sequencer.sequencerTracks[currentInstrument];
+
+      // Use density to control fill percentage
+      // density 1 (1 button lit) = 5-10% sparse
+      // density 2 (2 buttons lit) = 15-25% medium
+      // density 3 (3 buttons lit) = 30-40% dense/chaotic
+      let fillPercentage;
+      if (rndDensity === 1) {
+        fillPercentage = 0.05 + Math.random() * 0.05; // 5-10%
+      } else if (rndDensity === 2) {
+        fillPercentage = 0.15 + Math.random() * 0.1; // 15-25%
+      } else {
+        fillPercentage = 0.3 + Math.random() * 0.1; // 30-40%
+      }
+
+      const numSteps = Math.floor(384 * fillPercentage);
+
+      // SAFETY: Ensure we ALWAYS add at least some notes (minimum 5 steps)
+      const minSteps = Math.max(numSteps, 5);
+
+      // Pick one random octave value for the whole pattern (mono - no chords)
+      const octaveValue = Math.floor(Math.random() * 5); // 0-4 octave values
+
+      // Clear current track
+      for (let i = 0; i < 384; i++) {
+        track[i] = 0;
+        sequencer.retrigTracks[currentInstrument][i] = 1;
+        sequencer.probTracks[currentInstrument][i] = 100;
+      }
+
+      // Add random notes with the same octave value (mono)
+      // Use a Set to avoid duplicate indices
+      const usedIndices = new Set();
+      while (usedIndices.size < minSteps) {
+        const randomIndex = Math.floor(Math.random() * 384);
+        usedIndices.add(randomIndex);
+      }
+
+      // Apply the notes
+      usedIndices.forEach(index => {
+        track[index] = octaveValue;
+      });
+
+      sequencer.grid.createGrid();
+      sequencer.memory.savePatternWithUI(sequencer.currentPatternIndex);
+      console.log('🎲 Randomized GRID pattern for', currentInstrument, '- density:', rndDensity, 'octave:', octaveValue, 'steps:', minSteps);
+    };
+
+    function randomizeAllSound() {
+      const doc = getInnerDoc();
+      if (!doc) return;
+
+      const editSurface = doc.querySelector('.edit-surface-injected');
+      if (!editSurface) {
+        console.log('Edit surface not found - switching to edit mode first');
+        setMainSurfaceMode('edit');
+        setTimeout(randomizeAllSound, 100);
+        return;
+      }
+
+      // Click all 4 dice buttons in the edit panels
+      const diceButtons = editSurface.querySelectorAll('.dice-randomize-btn');
+      diceButtons.forEach(btn => {
+        btn.click();
+      });
+
+      console.log('🎲 Randomized ALL SOUND parameters (SOUND + FILTER + ADSR + FX)');
+    }
+
+    function resetAllSound() {
+      const win = getInnerWin();
+      if (!win?.sequencer) return;
+
+      const synthEngine = win.sequencer;
+      const activeTrack = getCurrentTrackName();
+
+      if (!synthEngine.instrumentSettings || !synthEngine.instrumentSettings[activeTrack]) return;
+
+      // Reset to neutral/default values
+      const defaults = {
+        // ADSR
+        attack: 0.01,
+        decay: 0.1,
+        sustain: 0.7,
+        release: 0.3,
+        // Filter ADSR
+        filterAttack: 0.01,
+        filterDecay: 0.1,
+        filterSustain: 0.7,
+        filterRelease: 0.3,
+        // Filter
+        filterCutoff: 1000,
+        filterRes: 1,
+        filterDrive: 0,
+        filterTrack: 50,
+        filterType: 'lowpass',
+        // Sound
+        waveform: 'sine',
+        detune: 0,
+        octave: 0,
+        pan: 0,
+        velocity: 1
+      };
+
+      // Apply defaults
+      Object.assign(synthEngine.instrumentSettings[activeTrack], defaults);
+
+      // Persist to localStorage
+      if (synthEngine.saveInstrumentSettings) {
+        synthEngine.saveInstrumentSettings();
+      }
+
+      // If in edit mode, refresh the UI
+      if (mainSurfaceMode === 'edit') {
+        renderEditView();
+      }
+
+      console.log('🔄 Reset all SOUND parameters to neutral defaults');
+    }
+
     playToggle.addEventListener('click', () => {
       const win = getInnerWin();
       if (!win?.sequencer) return;
@@ -6157,53 +6775,73 @@
       else clickInner('play-button');
       setTimeout(updateFromInner, 50);
     });
-    // RND density control state (1 = default, 2 = +25%, 3 = +50%)
+    // RND density control state (1 = sparse, 2 = medium, 3 = dense/chaotic)
     let rndDensity = 1;
 
-    // Wire up RND density buttons
-    const rndDensityWrap = document.getElementById('rnd-density-wrap');
-    if (rndDensityWrap) {
-      const densityButtons = rndDensityWrap.querySelectorAll('.rnd-density-btn');
+    // Wire up RND density buttons in topbar
+    const rndDensityWrapTopbar = document.getElementById('rnd-density-wrap-topbar');
+    if (rndDensityWrapTopbar) {
+      const densityButtons = rndDensityWrapTopbar.querySelectorAll('.rnd-density-btn');
       densityButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           const density = parseInt(btn.dataset.density);
           rndDensity = density;
 
-          // Update active states - all buttons up to and including clicked one
+          // Update active states - bottom button is 1, middle is 2, top is 3
+          // Light up from bottom to clicked button
           densityButtons.forEach(b => {
             const bDensity = parseInt(b.dataset.density);
             b.classList.toggle('is-active', bDensity <= density);
           });
+
+          console.log('🎚️ Density set to:', density);
         });
       });
     }
 
-    rndBtn.addEventListener('click', () => {
-      // Pass density to inner window
-      const win = getInnerWin();
-      if (win) {
-        win.rndDensityMultiplier = rndDensity === 1 ? 1.0 : rndDensity === 2 ? 1.25 : 1.5;
-      }
-      clickInner('random-button');
-    });
+    // OLD RND BUTTON REMOVED - using dice/grid workflow instead
+    // rndBtn.addEventListener('click', () => {
+    //   const win = getInnerWin();
+    //   if (win) {
+    //     win.rndDensityMultiplier = rndDensity === 1 ? 1.0 : rndDensity === 2 ? 1.25 : 1.5;
+    //   }
+    //   clickInner('random-button');
+    // });
 
     genBtn.addEventListener('click', () => {
-      generativeMode = !generativeMode;
-      genBtn.classList.toggle('is-active', generativeMode);
+      const win = getInnerWin();
+      if (!win?.sequencer) return;
+
+      const track = currentTrack; // Current track name (synth/bass/keys/lead)
+
+      // Toggle generative mode for this track
+      generativeMode[track] = !generativeMode[track];
+      genBtn.classList.toggle('is-active', generativeMode[track]);
 
       // Apply track color directly to this button
       const trackColor = TRACK_COLORS[currentTrackNumber]?.color || '#ff5a65';
-      if (generativeMode) {
+      if (generativeMode[track]) {
         genBtn.style.background = trackColor;
         genBtn.style.color = 'var(--bg)';
         genBtn.style.borderColor = trackColor;
+
+        // Generate initial pattern immediately
+        randomizeGridPattern(win.sequencer);
+
+        showStatus(`GENERATIVE MODE ON - ${track.toUpperCase()}`);
       } else {
         genBtn.style.background = 'transparent';
         genBtn.style.color = trackColor;
         genBtn.style.borderColor = trackColor;
+
+        showStatus(`GENERATIVE MODE OFF - ${track.toUpperCase()}`);
       }
 
-      showStatus(generativeMode ? 'GENERATIVE MODE ON' : 'GENERATIVE MODE OFF');
+      // Store generative state in the iframe so it persists
+      win.__generativeMode = generativeMode;
+
+      // Also expose to parent window for iframe to access
+      window.__generativeMode = generativeMode;
     });
 
     recBtn.addEventListener('click', () => {

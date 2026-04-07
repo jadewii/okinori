@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>JAMNUTZ — Music Playground</title>
+
+        <script>
+            (() => {
+                try {
+                    const storedTheme =
+                        localStorage.getItem("theme") ||
+                        localStorage.getItem("site-theme") ||
+                        localStorage.getItem("jamnutz-theme");
+
+                    const prefersDark =
+                        window.matchMedia &&
+                        window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+                    const theme =
+                        storedTheme === "dark" || storedTheme === "light"
+                            ? storedTheme
+                            : prefersDark
+                              ? "dark"
+                              : "light";
+
+                    document.documentElement.setAttribute("data-theme", theme);
+                } catch (e) {}
+            })();
+        </script>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+            rel="stylesheet"
+        />
+
+        <style>
+            :root {
+                --black: #000;
+                --gray: #666;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                background: #fff;
+            }
+
+            html[data-theme="dark"] {
+                background: #0f0f10;
+                color-scheme: dark;
+            }
+
+            html[data-theme="light"] {
+                color-scheme: light;
+            }
+
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system;
+                background: #fff;
+                color: #000;
+            }
+
+            .nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 20px 30px;
+            }
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 30px;
+                letter-spacing: 1px;
+                text-decoration: none;
+                color: #000;
+            }
+
+            .logo img {
+                height: 44px;
+                width: 44px;
+                border-radius: 10px;
+            }
+
+            .logo-dark {
+                display: none;
+            }
+
+            html[data-theme="dark"] .logo-light {
+                display: none;
+            }
+
+            html[data-theme="dark"] .logo-dark {
+                display: block;
+            }
+
+            .nav > div a {
+                text-decoration: none;
+                color: #000;
+                margin-left: 20px;
+                font-size: 14px;
+            }
+
+            .nav > div:last-child {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .theme-toggle {
+                appearance: none;
+                width: 40px;
+                height: 40px;
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 999px;
+                background: transparent;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: inherit;
+                transition:
+                    transform 0.2s ease,
+                    opacity 0.2s ease,
+                    border-color 0.2s ease;
+            }
+
+            .theme-toggle:hover {
+                transform: rotate(12deg);
+            }
+
+            .theme-toggle svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.9;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .hero {
+                text-align: center;
+                padding: 80px 20px 1px;
+            }
+
+            .hero h1 {
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 90px;
+                letter-spacing: 2px;
+            }
+
+            .sequencer {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 8px;
+            }
+
+            .step {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #eee;
+                transition: all 0.12s ease;
+            }
+
+            .step.active {
+                background: #ff4fa3;
+                transform: scale(1.4);
+            }
+
+            .hero p {
+                max-width: 600px;
+                margin: 20px auto;
+                font-size: 16px;
+                color: #666;
+            }
+
+            .cta {
+                margin-top: 30px;
+            }
+
+            .btn {
+                display: inline-block;
+                padding: 12px 22px;
+                margin: 5px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-size: 14px;
+            }
+
+            .btn-primary {
+                background: #000;
+                color: #fff;
+            }
+            .btn-secondary {
+                border: 1px solid #000;
+                color: #000;
+            }
+
+            .featured-apps {
+                padding: 30px 30px;
+                max-width: 1280px;
+                margin: 0 auto;
+            }
+
+            .featured-apps h2 {
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 42px;
+                letter-spacing: 1px;
+                margin-bottom: 28px;
+            }
+
+            .featured-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 34px;
+            }
+
+            .tool-card {
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .tool-card-media img {
+                width: 100%;
+                height: auto;
+                max-height: 260px;
+                object-fit: contain;
+                border-radius: 18px;
+            }
+
+            .tool-card h3 {
+                text-transform: lowercase;
+                font-size: 18px;
+            }
+
+            .apps-list {
+                padding: 40px 30px 100px;
+                max-width: 1280px;
+                margin: 0 auto;
+            }
+
+            .apps-list h2 {
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 42px;
+                margin-bottom: 30px;
+            }
+
+            .apps-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 30px 80px;
+            }
+
+            .apps-grid div {
+                font-size: 18px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .footer {
+                text-align: center;
+                padding: 40px;
+                font-size: 12px;
+                color: #888;
+            }
+
+            html[data-theme="dark"] body {
+                background: #0f0f10;
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .nav a,
+            html[data-theme="dark"] .logo,
+            html[data-theme="dark"] .btn-secondary,
+            html[data-theme="dark"] .apps-grid div,
+            html[data-theme="dark"] .tool-card .tool-link {
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .btn-primary {
+                background: #f5f5f7;
+                color: #111;
+            }
+
+            html[data-theme="dark"] .btn-secondary {
+                border-color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .hero p,
+            html[data-theme="dark"] .footer {
+                color: #b5b5bc;
+            }
+
+            html[data-theme="dark"] .step {
+                background: #2a2a31;
+            }
+
+            html[data-theme="dark"] .apps-grid div {
+                border-bottom-color: #2b2b31;
+            }
+
+            .mobile-only {
+                display: none;
+            }
+
+            .desktop-only {
+                display: inline;
+            }
+
+            .mobile-okinori {
+                display: none;
+            }
+
+            .pill-card {
+                background: #f5f5f5;
+                border-radius: 16px;
+                padding: 24px;
+            }
+
+            .pill-card p {
+                color: #666;
+                font-size: 14px;
+            }
+
+            html[data-theme="dark"] .pill-card {
+                background: #1a1a20;
+            }
+
+            html[data-theme="dark"] .pill-card h3 {
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .pill-card p {
+                color: #b5b5bc;
+            }
+
+            @media (max-width: 680px) {
+                html,
+                body {
+                    height: 100%;
+                    overflow: hidden;
+                }
+
+                body {
+                    min-height: 100svh;
+                }
+
+                .nav {
+                    padding: 16px 16px;
+                    min-height: 66px;
+                    gap: 12px;
+                }
+
+                .logo {
+                    gap: 10px;
+                    font-size: 22px;
+                    line-height: 1;
+                    min-height: 34px;
+                }
+
+                .logo img {
+                    height: 34px;
+                    width: 34px;
+                    border-radius: 8px;
+                    display: block;
+                    flex: 0 0 34px;
+                }
+
+                .nav > div {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    min-height: 34px;
+                }
+
+                .nav > div a {
+                    margin-left: 0;
+                    font-size: 13px;
+                    line-height: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 34px;
+                }
+
+                .logo .logo-light {
+                    display: block;
+                }
+
+                .logo .logo-dark {
+                    display: none;
+                }
+
+                html[data-theme="dark"] .logo .logo-light {
+                    display: none;
+                }
+
+                html[data-theme="dark"] .logo .logo-dark {
+                    display: block;
+                }
+
+                .hero {
+                    padding: 22px 16px 0;
+                    min-height: calc(100svh - 66px);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: flex-start;
+                }
+
+                .hero h1 {
+                    font-size: 52px;
+                    line-height: 0.95;
+                    letter-spacing: 1px;
+                }
+
+                .sequencer {
+                    gap: 6px;
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    overflow: visible;
+                }
+
+                .step {
+                    width: 12px;
+                    height: 12px;
+                    flex: 0 0 12px;
+                }
+
+                .hero p {
+                    margin: 12px auto 0;
+                    font-size: 15px;
+                    max-width: 330px;
+                }
+
+                .mobile-only {
+                    display: block;
+                }
+
+                .desktop-only,
+                .featured-apps,
+                .apps-list,
+                .pill-card,
+                .footer,
+                section[style*="max-width: 1280px; margin: 0 auto; padding: 40px 30px 20px"],
+                section[style*="text-align: center; padding: 60px 20px"] {
+                    display: none !important;
+                }
+
+                .mobile-okinori {
+                    display: block;
+                    width: min(100%, 320px);
+                    margin: 18px auto 0;
+                    pointer-events: none;
+                    flex: 0 1 auto;
+                }
+
+                .mobile-okinori img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                    object-fit: contain;
+                    border-radius: 0;
+                    margin-bottom: 28px;
+                }
+
+                .cta {
+                    margin-top: 12px;
+                }
+
+                .btn {
+                    margin: 0;
+                }
+            }
+        </style>
+
+        <style>
+            .featured-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 40px;
+                align-items: start;
+            }
+            .featured-card {
+                display: grid;
+                grid-template-rows: 360px auto;
+                text-decoration: none;
+                color: inherit;
+            }
+            .featured-card-media {
+                height: 360px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .featured-card-media img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                display: block;
+            }
+            .featured-card h3 {
+                margin: 18px 0 0;
+                font-size: 18px;
+                line-height: 1.1;
+                text-align: left;
+            }
+        </style>
+    
+<style>
+@media (max-width:768px){
+
+/* remove any box constraints around image */
+.featured-app,
+.featured-app *{
+    background:none !important;
+    box-shadow:none !important;
+    border:none !important;
+    padding:0 !important;
+}
+
+/* make sure image shows fully */
+.featured-app img{
+    width:100% !important;
+    height:auto !important;
+    object-fit:contain !important;
+    margin-bottom:44px !important;
+}
+
+/* push button slightly further down */
+.browse-apps-btn{
+    margin-top:44px !important;
+}
+
+}
+</style>
+
+</head>
+
+    <body>
+        <div class="nav">
+            <a href="index.html" class="logo">
+                <img src="assets/images/jamnutzicon.png" class="logo-light" />
+                <img src="assets/images/jamnutzwhite.png" class="logo-dark" />
+                JAMNUTZ
+            </a>
+            <div>
+                <a href="index.html">Home</a>
+                <a href="apps.html">Apps</a>
+            </div>
+        </div>
+
+        <section class="hero">
+            <h1>LET'S JAM</h1>
+
+            <div class="sequencer" id="seq"></div>
+
+            <p>
+                escape the monotony of linear composition with our ever growing
+                collection of instruments and experimental music tools, made for
+                desktop.
+            </p>
+
+            <div class="mobile-okinori">
+                <img src="assets/images/apps/web/okinori.png" alt="okinori" />
+            </div>
+
+            <span class="desktop-only">Just open and play.</span>
+            <div class="cta">
+                <a href="apps.html" class="btn btn-primary"
+                    ><span class="desktop-only">PLAY NOW</span
+                    ><span class="mobile-only">BROWSE APPS</span></a
+                >
+            </div>
+        </section>
+
+        <section class="featured-apps">
+            <h2>FEATURED APPS</h2>
+            <div class="featured-grid">
+                <a
+                    class="featured-card"
+                    href="apps.html?filter=experimental"
+                >
+                    <div class="featured-card-media">
+                        <img
+                            src="assets/images/apps/web/gridgenerator.png"
+                            alt="gridgenerator"
+                        />
+                    </div>
+                    <h3>gridgenerator</h3>
+                </a>
+
+                <a class="featured-card" href="apps/okinori/?from=home">
+                    <div class="featured-card-media">
+                        <img src="assets/images/apps/web/okinori.png" alt="okinori" />
+                    </div>
+                    <h3>okinori</h3>
+                </a>
+
+                <a class="featured-card" href="apps.html?filter=instruments">
+                    <div class="featured-card-media">
+                        <img src="assets/images/apps/web/chipboi.png" alt="chipboi" />
+                    </div>
+                    <h3>chipboi</h3>
+                </a>
+            </div>
+        </section>
+
+        <section
+            style="max-width: 1280px; margin: 0 auto; padding: 40px 30px 20px"
+        >
+            <div
+                style="
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                "
+            >
+                <div class="pill-card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px">
+                        Rhythm, melody, and texture tools
+                    </h3>
+                    <p>
+                        Step sequencers, drum machines, samplers, and pattern generators built to quickly create loops, motifs, and sonic foundations.
+                    </p>
+                </div>
+
+                <div class="pill-card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px">
+                        Generative systems for discovery
+                    </h3>
+                    <p>
+                        Probability, modulation, and visual interaction help uncover patterns and sounds that evolve beyond predictable workflows.
+                    </p>
+                </div>
+
+                <div class="pill-card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px">
+                        Designed for experimentation
+                    </h3>
+                    <p>
+                        Lightweight apps that encourage rapid testing, iteration, and playful exploration without breaking creative momentum.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section style="text-align: center; padding: 60px 20px"></section>
+
+        <section class="apps-list">
+            <h2>ALL APPS</h2>
+
+            <div class="apps-grid">
+                <div>interval trainer</div>
+                <div>harmonic melodizer</div>
+                <div>jazz intervals</div>
+
+                <div>nippon</div>
+                <div>grid generator mini</div>
+                <div>chipboi</div>
+
+                <div>grid generator</div>
+                <div>jazzy blops</div>
+                <div>playa</div>
+
+                <div>japanese arp tracker</div>
+                <div>sound explorer 98</div>
+                <div>dreammaker</div>
+
+                <div>okinori</div>
+                <div>melodic delyzr</div>
+                <div>pocket beats</div>
+
+                <div>colombianita</div>
+                <div>rosita</div>
+                <div>8bit cubed</div>
+
+                <div>genwii tracker</div>
+                <div>arturito</div>
+            </div>
+        </section>
+
+        <div class="footer">© JAMNUTZ</div>
+
+        <script>
+            const steps = 16;
+            const seq = document.getElementById("seq");
+
+            const colors = ["#ff4fa3", "#5ecbff", "#ffe27a", "#7ee2a8"];
+            let colorIndex = 0;
+
+            const notes = [
+                261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88, 523.25,
+                587.33, 659.25, 698.46, 783.99, 880.0, 987.77, 1046.5, 1174.66,
+            ];
+
+            for (let i = 0; i < steps; i++) {
+                const s = document.createElement("div");
+                s.className = "step";
+                s.dataset.index = i;
+                seq.appendChild(s);
+            }
+
+            const stepEls = document.querySelectorAll(".step");
+
+            const ctx = new (
+                window.AudioContext || window.webkitAudioContext
+            )();
+
+            function playNote(freq) {
+                if (ctx.state === "suspended") ctx.resume();
+
+                const now = ctx.currentTime;
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+
+                o.type = "sine";
+                o.frequency.value = freq;
+
+                g.gain.setValueAtTime(0.0001, now);
+                g.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+                o.connect(g);
+                g.connect(ctx.destination);
+
+                o.start();
+                o.stop(now + 0.36);
+            }
+
+            stepEls.forEach((step) => {
+                step.addEventListener("pointerdown", (e) => {
+                    e.preventDefault();
+                    playNote(notes[step.dataset.index]);
+
+                    step.classList.add("active");
+                    step.style.opacity = "1";
+
+                    setTimeout(() => {
+                        step.classList.remove("active");
+                        step.style.opacity = "";
+                    }, 150);
+                });
+            });
+
+            setInterval(() => {
+                stepEls.forEach((s) => {
+                    s.classList.remove("active");
+                    s.style.background = "#eee";
+                });
+
+                const count = Math.floor(Math.random() * 5) + 2;
+
+                const chosen = new Set();
+                while (chosen.size < count) {
+                    chosen.add(Math.floor(Math.random() * steps));
+                }
+
+                chosen.forEach((index) => {
+                    const color = colors[colorIndex];
+                    colorIndex = (colorIndex + 1) % colors.length;
+
+                    const step = stepEls[index];
+                    step.classList.add("active");
+                    step.style.background = color;
+                });
+            }, 250);
+        </script>
+        <script src="assets/js/site.js"></script>
+    </body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "plans": [
+    {
+      "label": "Free",
+      "name": "Explore",
+      "price": 0,
+      "description": "Get the JAMNUTZ feel before subscriptions are wired up.",
+      "features": [
+        "Access launch messaging",
+        "Browse apps library",
+        "See Okinori product preview"
+      ],
+      "cta": "Start free",
+      "ctaUrl": "members/",
+      "featured": false
+    },
+    {
+      "label": "Launch",
+      "name": "JAMNUTZ Member",
+      "price": 20,
+      "description": "The planned subscription tier for full Okinori access and future app drops.",
+      "features": [
+        "Full Okinori access",
+        "Future JAMNUTZ app releases",
+        "Member dashboard",
+        "Priority support"
+      ],
+      "cta": "Go member",
+      "ctaUrl": "members/",
+      "featured": true
+    }
+  ]
+}

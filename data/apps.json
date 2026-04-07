@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "name": "Okinori",
+      "slug": "okinori",
+      "status": "Launch app",
+      "type": "Web instrument",
+      "path": "apps/okinori/",
+      "description": "A JAMNUTZ performance-focused music tool built for fast pattern creation, track switching, and expressive sequencing."
+    }
+  ]
+}

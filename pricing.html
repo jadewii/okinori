@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Pricing — Jamnutz Music Playground</title>
+        <meta
+            name="description"
+            content="Get unlimited access to 20+ browser-based music tools for $20/month. Cancel anytime."
+        />
+        <link rel="stylesheet" href="assets/css/site.css" />
+
+        <style>
+            .pricing-page {
+                padding-top: 4rem;
+                padding-bottom: 4rem;
+            }
+
+            .pricing-hero {
+                max-width: 800px;
+                margin: 0 auto 4rem;
+                text-align: center;
+            }
+
+            .pricing-hero h1 {
+                margin: 0 0 1rem;
+                font-size: clamp(2.5rem, 6vw, 4rem);
+                line-height: 1;
+                letter-spacing: -0.04em;
+            }
+
+            .pricing-hero p {
+                font-size: 1.15rem;
+                color: rgba(0, 0, 0, 0.68);
+                line-height: 1.6;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .pricing-card {
+                max-width: 520px;
+                margin: 0 auto;
+                padding: 3rem 2.5rem;
+                border-radius: 32px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                background: linear-gradient(
+                    180deg,
+                    rgba(255, 255, 255, 0.98) 0%,
+                    rgba(247, 244, 238, 0.96) 100%
+                );
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            }
+
+            .price {
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+
+            .price-amount {
+                font-size: 4rem;
+                font-weight: 700;
+                line-height: 1;
+                letter-spacing: -0.04em;
+                margin-bottom: 0.5rem;
+            }
+
+            .price-period {
+                font-size: 1.2rem;
+                color: rgba(0, 0, 0, 0.6);
+                font-weight: 600;
+            }
+
+            .price-trial {
+                margin-top: 1rem;
+                padding: 0.8rem 1.2rem;
+                background: rgba(0, 0, 0, 0.04);
+                border-radius: 999px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: rgba(0, 0, 0, 0.7);
+            }
+
+            .features {
+                list-style: none;
+                padding: 0;
+                margin: 0 0 2.5rem;
+            }
+
+            .features li {
+                padding: 1rem 0;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 1.05rem;
+            }
+
+            .features li:last-child {
+                border-bottom: none;
+            }
+
+            .features li::before {
+                content: "✓";
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: #111;
+                color: #fff;
+                font-weight: 700;
+                font-size: 0.9rem;
+                flex-shrink: 0;
+            }
+
+            .cta-button {
+                display: block;
+                width: 100%;
+                padding: 1.2rem 2rem;
+                background: #111;
+                color: #fff;
+                border: none;
+                border-radius: 999px;
+                font: inherit;
+                font-size: 1.1rem;
+                font-weight: 700;
+                text-align: center;
+                text-decoration: none;
+                cursor: pointer;
+                transition: transform 0.2s ease, opacity 0.2s ease;
+            }
+
+            .cta-button:hover {
+                transform: translateY(-2px);
+                opacity: 0.9;
+            }
+
+            .fine-print {
+                margin-top: 2rem;
+                text-align: center;
+                font-size: 0.9rem;
+                color: rgba(0, 0, 0, 0.5);
+                line-height: 1.5;
+            }
+
+            @media (max-width: 640px) {
+                .pricing-card {
+                    padding: 2rem 1.5rem;
+                }
+
+                .price-amount {
+                    font-size: 3rem;
+                }
+            }
+        </style>
+    </head>
+    <body data-page="pricing" data-root="">
+        <div id="site-header"></div>
+
+        <main class="page pricing-page">
+            <div class="container">
+                <div class="pricing-hero">
+                    <h1>Simple, Transparent Pricing</h1>
+                    <p>
+                        Get unlimited access to our entire collection of browser-based music tools.
+                        No downloads. No hidden fees. Just create.
+                    </p>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="price">
+                        <div class="price-amount">$20</div>
+                        <div class="price-period">per month</div>
+                        <div class="price-trial">7-day free trial included</div>
+                    </div>
+
+                    <ul class="features">
+                        <li>Access to 20+ music apps</li>
+                        <li>Synths, drum machines, samplers & sequencers</li>
+                        <li>New app added every month</li>
+                        <li>Works in your browser - no downloads</li>
+                        <li>Cancel anytime, no questions asked</li>
+                    </ul>
+
+                    <a href="#" class="cta-button">Start Your Free Trial</a>
+
+                    <p class="fine-print">
+                        No credit card required for trial. Cancel anytime during your trial period
+                        and you won't be charged.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <div id="site-footer"></div>
+
+        <script src="assets/js/site.js"></script>
+    </body>
+</html>

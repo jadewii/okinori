@@ -2792,7 +2792,7 @@ body.jamnutz-light .drum-pad-button.active {
     }
 
     // Use provided startTime or current time for immediate playback
-    const scheduleTime = startTime !== null ? startTime : this.audioContext.currentTime;
+    const scheduleTime = startTime !== null ? startTime : this.audioContext.currentTime + 0.01; // Add 10ms buffer to prevent audio pop
 
     // Resolve instrument explicitly - use override if provided, otherwise use currentInstrument
     const instrument = instrumentOverride || this.currentInstrument;
@@ -4641,19 +4641,36 @@ body.jamnutz-light .drum-pad-button.active {
             retrigValue = 1;
           }
 
+          // Track color mapping for visuals
+          const instrumentToTrackColor = {
+            'synth': '#ff5a65',
+            'bass': '#1bdb74',
+            'keys': '#ff9d00',
+            'lead': '#6e31ff',
+            'pad': '#6e31ff',
+            'fx': '#ff5a65'
+          };
+
+          // In PROB mode, show water-fill visual for ACTIVE steps only
+          if (this.sequencer.probMode && isActiveOnCurrent) {
+            const probValue = this.sequencer.probTracks[currentInstrument][i] || 100;
+            const trackColor = instrumentToTrackColor[currentInstrument];
+
+            // Style comparison: synth/bass use smooth gradient, keys/lead use hard cut
+            if (currentInstrument === 'synth' || currentInstrument === 'bass') {
+              // STYLE 1: Smooth gradient fade - fills from bottom
+              cell.style.setProperty('background', `linear-gradient(to top, ${trackColor} 0%, ${trackColor} ${probValue}%, rgba(0,0,0,0.3) ${probValue}%, rgba(0,0,0,0.3) 100%)`, 'important');
+            } else {
+              // STYLE 2: Hard cut (sharp line between filled/empty) - fills from bottom
+              cell.style.setProperty('background', `linear-gradient(to top, ${trackColor} ${probValue}%, rgba(0,0,0,0.3) ${probValue}%)`, 'important');
+            }
+          }
+
           if (isActiveOnCurrent && retrigValue > 0) {
             // Add retrig intensity class (retrig-1, retrig-2, retrig-3, retrig-4)
             cell.classList.add(`retrig-${retrigValue}`);
 
             // Set track color on cell for retrig visuals
-            const instrumentToTrackColor = {
-              'synth': '#ff5a65',
-              'bass': '#1bdb74',
-              'keys': '#ff9d00',
-              'lead': '#6e31ff',
-              'pad': '#6e31ff',
-              'fx': '#ff5a65'
-            };
             cell.style.setProperty('--cell-track-color', instrumentToTrackColor[currentInstrument]);
 
             // In TRIG mode, show retrig number
@@ -4754,7 +4771,7 @@ body.jamnutz-light .drum-pad-button.active {
       const currentValue = this.sequencer.sequencerTracks[currentInstrument][index] || 0;
       const justAdded = currentValue > 0; // After toggle, if it's active, we just added it
 
-      if (justAdded && !this.sequencer.trigMode) {
+      if (justAdded && !this.sequencer.trigMode && !this.sequencer.probMode) {
         const note = cell.dataset.note;
         if (note) {
           // FIXED GRID PREVIEW - clean short note, no drone, no stacking
@@ -4783,7 +4800,7 @@ body.jamnutz-light .drum-pad-button.active {
       const currentValue = this.sequencer.sequencerTracks[currentInstrument][index] || 0;
       const justAdded = currentValue > 0;
 
-      if (justAdded && !this.sequencer.trigMode) {
+      if (justAdded && !this.sequencer.trigMode && !this.sequencer.probMode) {
         const note = cell.dataset.note;
         if (note) {
           // FIXED GRID PREVIEW - clean short note, no drone, no stacking
@@ -5009,6 +5026,14 @@ body.jamnutz-light .drum-pad-button.active {
           const cellIndex = row * 32 + column;
           const stepValue = this.sequencer.sequencerTracks[instrument][cellIndex];
           if (stepValue > 0) {
+            // PROBABILITY CHECK: roll the dice!
+            const probValue = this.sequencer.probTracks[instrument][cellIndex] || 100;
+            const roll = Math.random() * 100;
+            if (roll > probValue) {
+              // Failed probability check - skip this note
+              continue;
+            }
+
             const currentScale = window.keyboard ? window.keyboard.currentScale : "major";
             const scales = {
               major: [0, 2, 4, 5, 7, 9, 11],
@@ -5271,8 +5296,29 @@ body.jamnutz-light .drum-pad-button.active {
           }
           this.audioScheduler.playStepNotes(this.sequencer.currentStep, this.lastUpdateTime);
           const nextStep = this.sequencer.getNextStep();
-          if (nextStep === 0 && this.sequencer.direction === "forward") {
-            console.log("Sequence looping back to first step");
+
+          // Check for loop point - when going from step 31 to step 0
+          if (this.sequencer.currentStep === 31 && nextStep === 0) {
+            // Check if generative mode is active from parent window
+            const generativeMode = window.parent?.__generativeMode;
+
+            if (generativeMode) {
+              const currentInstrument = this.sequencer.currentInstrument;
+
+              if (generativeMode[currentInstrument]) {
+                // Flash the GEN button to show it's regenerating
+                const genBtn = window.parent?.document?.getElementById('gen-btn');
+                if (genBtn) {
+                  genBtn.classList.add('flash');
+                  setTimeout(() => genBtn.classList.remove('flash'), 300);
+                }
+
+                // Call the randomize function from parent window
+                if (window.parent?.randomizeGridPattern) {
+                  window.parent.randomizeGridPattern(this.sequencer);
+                }
+              }
+            }
           }
           this.sequencer.currentStep = nextStep;
           this.lastUpdateTime += secondsPerStep;
@@ -5915,6 +5961,12 @@ body.jamnutz-light .drum-pad-button.active {
         retrigLead: [...this.sequencer.retrigTracks.lead],
         retrigPad: [...this.sequencer.retrigTracks.pad],
         retrigFx: [...this.sequencer.retrigTracks.fx],
+        probSynth: [...this.sequencer.probTracks.synth],
+        probBass: [...this.sequencer.probTracks.bass],
+        probKeys: [...this.sequencer.probTracks.keys],
+        probLead: [...this.sequencer.probTracks.lead],
+        probPad: [...this.sequencer.probTracks.pad],
+        probFx: [...this.sequencer.probTracks.fx],
         octaveOffsets: { ...this.sequencer.sequencerOctaveOffsets },
         directions: { ...this.sequencer.directions },
         pendulumReverse: { ...this.sequencer.pendulumReverse }
@@ -5939,6 +5991,14 @@ body.jamnutz-light .drum-pad-button.active {
           this.sequencer.retrigTracks.lead = pattern.retrigLead ? [...pattern.retrigLead] : Array(384).fill(0);
           this.sequencer.retrigTracks.pad = pattern.retrigPad ? [...pattern.retrigPad] : Array(384).fill(0);
           this.sequencer.retrigTracks.fx = pattern.retrigFx ? [...pattern.retrigFx] : Array(384).fill(0);
+
+          // Load prob data (default to 100 for compatibility with old patterns)
+          this.sequencer.probTracks.synth = pattern.probSynth ? [...pattern.probSynth] : Array(384).fill(100);
+          this.sequencer.probTracks.bass = pattern.probBass ? [...pattern.probBass] : Array(384).fill(100);
+          this.sequencer.probTracks.keys = pattern.probKeys ? [...pattern.probKeys] : Array(384).fill(100);
+          this.sequencer.probTracks.lead = pattern.probLead ? [...pattern.probLead] : Array(384).fill(100);
+          this.sequencer.probTracks.pad = pattern.probPad ? [...pattern.probPad] : Array(384).fill(100);
+          this.sequencer.probTracks.fx = pattern.probFx ? [...pattern.probFx] : Array(384).fill(100);
 
           // DEBUG: Log loaded retrig data
           const nonZeroRetrigs = Object.entries(this.sequencer.retrigTracks).reduce((acc, [inst, arr]) => {
@@ -5977,6 +6037,12 @@ body.jamnutz-light .drum-pad-button.active {
           this.sequencer.retrigTracks.lead = Array(384).fill(0);
           this.sequencer.retrigTracks.pad = Array(384).fill(0);
           this.sequencer.retrigTracks.fx = Array(384).fill(0);
+          this.sequencer.probTracks.synth = Array(384).fill(100);
+          this.sequencer.probTracks.bass = Array(384).fill(100);
+          this.sequencer.probTracks.keys = Array(384).fill(100);
+          this.sequencer.probTracks.lead = Array(384).fill(100);
+          this.sequencer.probTracks.pad = Array(384).fill(100);
+          this.sequencer.probTracks.fx = Array(384).fill(100);
           this.sequencer.sequencerOctaveOffsets = { synth: 0, bass: 0, keys: 0, lead: 0, pad: 0, fx: 0 };
           this.sequencer.directions = { synth: "forward", bass: "forward", keys: "forward", lead: "forward", pad: "forward", fx: "forward" };
           this.sequencer.pendulumReverse = { synth: false, bass: false, keys: false, lead: false, pad: false, fx: false };
@@ -6045,6 +6111,34 @@ body.jamnutz-light .drum-pad-button.active {
       const currentInstrument = this.sequencer.currentInstrument;
       const currentValue = this.sequencer.sequencerTracks[currentInstrument][index] || 0;
       const isActive = currentValue > 0;
+
+      // PROB MODE: add new steps with prob=100, or cycle probability values (100 -> 25 -> 50 -> 75 -> 100) for active steps
+      if (this.sequencer.probMode) {
+        if (isActive) {
+          // Cycle probability value for existing step
+          const currentProb = this.sequencer.probTracks[currentInstrument][index] || 100;
+          let nextProb;
+
+          if (currentProb === 100) nextProb = 25;
+          else if (currentProb === 25) nextProb = 50;
+          else if (currentProb === 50) nextProb = 75;
+          else nextProb = 100; // 75 -> 100
+
+          this.sequencer.probTracks[currentInstrument][index] = nextProb;
+          console.log(`🎲 PROB on ${currentInstrument}[${index}]: ${currentProb}% → ${nextProb}%`);
+        } else {
+          // Add new step with prob=100
+          this.sequencer.sequencerTracks[currentInstrument][index] = 1;
+          this.sequencer.probTracks[currentInstrument][index] = 100;
+          this.sequencer.retrigTracks[currentInstrument][index] = 1;
+          console.log(`➕ ADD step on ${currentInstrument}[${index}] with prob=100%`);
+        }
+
+        // Refresh grid - ALWAYS use full rebuild for immediate visual feedback
+        this.sequencer.grid.createGrid();
+        this.sequencer.memory.savePatternWithUI(this.sequencer.currentPatternIndex);
+        return;
+      }
 
       // TRIG MODE: add new steps with retrig=1, or cycle retrig count (1->2->3->4->1) for active steps
       if (this.sequencer.trigMode) {
@@ -6136,9 +6230,18 @@ body.jamnutz-light .drum-pad-button.active {
         pad: Array(384).fill(0),
         fx: Array(384).fill(0)
       };
+      this.probTracks = {
+        synth: Array(384).fill(100),
+        bass: Array(384).fill(100),
+        keys: Array(384).fill(100),
+        lead: Array(384).fill(100),
+        pad: Array(384).fill(100),
+        fx: Array(384).fill(100)
+      };
       this.currentInstrument = "synth";
       this.selectedCellIndex = -1;
       this.trigMode = false; // TRIG edit mode flag
+      this.probMode = false; // PROB edit mode flag
       this.sequencerOctaveOffsets = {
         synth: 0,
         bass: 0,

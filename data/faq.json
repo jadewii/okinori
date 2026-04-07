@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "q": "Is Stripe connected yet?",
+      "a": "Not in this v1 static launch build. The structure is ready so billing can be connected later without reorganizing the site."
+    },
+    {
+      "q": "Do I need a backend right now?",
+      "a": "No. This version is intentionally lean: public pages, member pages, product page, legal pages, and shared assets."
+    },
+    {
+      "q": "Can more apps be added later?",
+      "a": "Yes. Add a new folder under apps/, update data/apps.json, and the shared pages can scale from there."
+    }
+  ]
+}

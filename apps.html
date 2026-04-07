@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Apps — Jamnutz</title>
+<meta content="Browser-based music tools by Jamnutz" name="description"/>
+<meta content="light dark" name="color-scheme"/>
+<script>
+            (() => {
+                try {
+                    const storedTheme =
+                        localStorage.getItem("theme") ||
+                        localStorage.getItem("site-theme") ||
+                        localStorage.getItem("jamnutz-theme");
+                    const prefersDark =
+                        window.matchMedia &&
+                        window.matchMedia("(prefers-color-scheme: dark)")
+                            .matches;
+                    const theme =
+                        storedTheme === "dark" || storedTheme === "light"
+                            ? storedTheme
+                            : prefersDark
+                              ? "dark"
+                              : "light";
+                    document.documentElement.setAttribute("data-theme", theme);
+                } catch (e) {}
+            })();
+        </script>
+<link href="assets/css/site.css" rel="stylesheet"/>
+<style>
+            html {
+                background: #fff;
+            }
+
+            html[data-theme="dark"] {
+                background: #0f0f10;
+                color-scheme: dark;
+            }
+
+            html[data-theme="light"] {
+                color-scheme: light;
+            }
+
+            /* NAV */
+            .nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 20px 30px;
+            }
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 30px;
+                letter-spacing: 1px;
+                text-decoration: none;
+                color: #000;
+            }
+
+            .logo img {
+                height: 44px;
+                width: 44px;
+                border-radius: 10px;
+            }
+
+            .logo-dark {
+                display: none;
+            }
+
+            html[data-theme="dark"] .logo-light {
+                display: none;
+            }
+
+            html[data-theme="dark"] .logo-dark {
+                display: block;
+            }
+
+            .nav > div a {
+                text-decoration: none;
+                color: #000;
+                margin-left: 20px;
+                font-size: 14px;
+            }
+
+            .nav > div:last-child {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .theme-toggle {
+                appearance: none;
+                width: 40px;
+                height: 40px;
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 999px;
+                background: transparent;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: inherit;
+                transition:
+                    transform 0.2s ease,
+                    opacity 0.2s ease,
+                    border-color 0.2s ease;
+            }
+
+            .theme-toggle:hover {
+                transform: rotate(12deg);
+            }
+
+            .theme-toggle svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.9;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            body {
+                background: #fff;
+                color: #000;
+            }
+
+            html[data-theme="dark"] body {
+                background: #0f0f10 !important;
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .apps-page,
+            html[data-theme="dark"] .apps-hero,
+            html[data-theme="dark"] .apps-shell {
+                background: #0f0f10;
+            }
+
+            html[data-theme="dark"] .nav a,
+            html[data-theme="dark"] .logo,
+            html[data-theme="dark"] .tool-link,
+            html[data-theme="dark"] h1 {
+                color: #f5f5f7;
+            }
+
+            .apps-page {
+                padding-top: 0;
+                padding-bottom: 4.5rem;
+            }
+
+            .apps-hero {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 0 30px 20px;
+            }
+
+            .apps-hero h1 {
+                margin: 0 0 16px 0;
+                font-family: "Bebas Neue", sans-serif;
+                font-size: 42px;
+                letter-spacing: 1px;
+                line-height: 1;
+            }
+
+            .apps-shell {
+                max-width: 1280px;
+                margin: 0 auto;
+                padding: 0 30px;
+            }
+
+            .tool-filters {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                margin-bottom: 30px;
+            }
+
+            .filter-pill {
+                appearance: none;
+                border: 1px solid #d8d1c7;
+                background: #f7f4ee;
+                color: #111;
+                border-radius: 999px;
+                padding: 11px 17px;
+                font: inherit;
+                font-size: 0.88rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+                white-space: nowrap;
+            }
+
+            .filter-pill:hover {
+                transform: translateY(-1px);
+            }
+
+            .filter-pill.is-active {
+                background: #111;
+                color: #fff;
+                border-color: #111;
+            }
+
+            html[data-theme="dark"] .filter-pill {
+                background: #1d1d21;
+                border-color: #2b2b31;
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .filter-pill:hover {
+                background: #252529;
+            }
+
+            html[data-theme="dark"] .filter-pill.is-active {
+                background: #f5f5f7;
+                color: #111;
+                border-color: #f5f5f7;
+            }
+
+            .apps-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 28px 24px;
+                align-items: start;
+            }
+
+            .tool-card[hidden] {
+                display: none !important;
+            }
+
+            .tool-card {
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+                align-self: start;
+                padding: 20px;
+                border-radius: 20px;
+                background: transparent;
+            }
+
+            .tool-card-media {
+                width: 100%;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+            }
+
+            .tool-card-media img {
+                width: 100%;
+                height: auto;
+                display: block;
+                max-height: none;
+                object-fit: contain;
+                border-radius: 18px;
+                background: transparent;
+            }
+
+            html[data-theme="dark"] .tool-card-media img {
+                background: transparent;
+            }
+
+            html[data-theme="dark"] .tool-card h3,
+            html[data-theme="dark"] .tool-link {
+                color: #000 !important;
+            }
+
+            html[data-theme="dark"] .tool-card {
+                background: #fff;
+            }
+
+            .tool-card,
+            .tool-card-media img,
+            .tool-card-copy {
+                box-sizing: border-box;
+            }
+
+            .tool-card-copy {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                flex: 1;
+            }
+
+            .tool-card h3 {
+                margin: 0;
+                font-size: 1.02rem;
+                line-height: 1.2;
+                text-transform: lowercase;
+            }
+
+            .tool-desc {
+                margin: 0;
+                font-size: 0.92rem;
+                line-height: 1.45;
+                color: #4b4b52;
+            }
+
+            html[data-theme="dark"] .tool-desc {
+                color: #4b4b52;
+            }
+
+            .tool-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                width: fit-content;
+                color: #111;
+                text-decoration: none;
+                font-size: 0.8rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                padding-bottom: 2px;
+                border-bottom: 1px solid transparent;
+                transition:
+                    border-color 0.2s ease,
+                    opacity 0.2s ease,
+                    transform 0.2s ease;
+            }
+
+            .mobile-apps-note {
+                display: none;
+                margin: 0 0 18px 0;
+                font-size: 0.92rem;
+                line-height: 1.4;
+                color: #5f5f67;
+            }
+
+            html[data-theme="dark"] .tool-link {
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .mobile-apps-note {
+                color: #b6b6be;
+            }
+
+            .tool-link::after {
+                content: "↗";
+                font-size: 0.92em;
+                line-height: 1;
+            }
+
+            .tool-link:hover {
+                border-color: currentColor;
+                opacity: 0.8;
+                transform: translateX(1px);
+            }
+
+
+            .tool-card-media-link,
+            .tool-title-link {
+                text-decoration: none;
+                color: inherit;
+                display: block;
+                cursor: pointer;
+            }
+
+            .tool-title-link {
+                width: fit-content;
+            }
+
+            @media (max-width: 680px) {
+                .tool-card-media-link,
+                .tool-title-link {
+                    pointer-events: none;
+                    cursor: default;
+                }
+            }
+
+            @media (max-width: 980px) {
+                .apps-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 680px) {
+                .nav {
+                    padding: 16px 16px;
+                    min-height: 66px;
+                    gap: 12px;
+                }
+
+                .logo {
+                    gap: 10px;
+                    font-size: 22px;
+                    line-height: 1;
+                    min-height: 34px;
+                }
+
+                .logo img {
+                    height: 34px;
+                    width: 34px;
+                    border-radius: 8px;
+                    display: block;
+                    flex: 0 0 34px;
+                }
+
+                .nav > div {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    min-height: 34px;
+                }
+
+                .nav > div a {
+                    margin-left: 0;
+                    font-size: 13px;
+                    line-height: 1;
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 34px;
+                }
+            }
+
+            @media (max-width: 680px) {
+                .apps-page {
+                    padding-top: 1.1rem;
+                    padding-bottom: 2.75rem;
+                }
+
+                .apps-hero,
+                .apps-shell {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                }
+
+                .apps-hero {
+                    display: none;
+                }
+
+                .mobile-apps-note {
+                    display: block;
+                }
+
+                .apps-grid {
+                    grid-template-columns: 1fr;
+                    gap: 18px;
+                }
+
+                .tool-card {
+                    gap: 12px;
+                }
+
+                .tool-card h3 {
+                    font-size: 1rem;
+                }
+
+                .tool-desc {
+                    font-size: 0.9rem;
+                }
+
+                .tool-link {
+                    display: none;
+                }
+            }
+
+            @media (max-width: 680px) {
+                .logo .logo-light {
+                    display: block;
+                }
+
+                .logo .logo-dark {
+                    display: none;
+                }
+
+                html[data-theme="dark"] .logo .logo-light {
+                    display: none;
+                }
+
+                html[data-theme="dark"] .logo .logo-dark {
+                    display: block;
+                }
+            }
+        
+            .tool-status {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 12px;
+                font-size: 0.78rem;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #111;
+            }
+
+            .tool-status-dot {
+                width: 9px;
+                height: 9px;
+                border-radius: 999px;
+                background: #0a0;
+                box-shadow: 0 0 0 4px rgba(0, 170, 0, 0.12);
+            }
+
+            .tool-card.is-live {
+                background: linear-gradient(180deg, rgba(247,244,238,0.8), rgba(247,244,238,0.42));
+                border: 1px solid #ece4d7;
+            }
+
+            .tool-card.is-disabled {
+                opacity: 0.88;
+            }
+
+            .tool-card.is-disabled .tool-card-media-link,
+            .tool-card.is-disabled .tool-title-link {
+                pointer-events: none;
+            }
+
+            .tool-card.is-disabled .tool-link {
+                color: #7a746c;
+                border-bottom-color: transparent;
+                pointer-events: none;
+                cursor: default;
+            }
+
+            html[data-theme="dark"] .tool-status {
+                color: #f5f5f7;
+            }
+
+            html[data-theme="dark"] .tool-status-dot {
+                background: #6ef06e;
+                box-shadow: 0 0 0 4px rgba(110, 240, 110, 0.12);
+            }
+
+            html[data-theme="dark"] .tool-card.is-live {
+                background: linear-gradient(180deg, rgba(29,29,33,0.98), rgba(22,22,26,0.88));
+                border: 1px solid #2b2b31;
+            }
+
+        </style>
+</head>
+<body data-page="apps" data-root="">
+<!-- NAV -->
+<div class="nav">
+<a class="logo" href="index.html">
+<img class="logo-light" src="assets/images/jamnutzicon.png"/>
+<img class="logo-dark" src="assets/images/jamnutzwhite.png"/>
+                JAMNUTZ
+            </a>
+<div>
+<a href="index.html">Home</a>
+<a href="apps.html">Apps</a>
+</div>
+</div>
+<main class="apps-page">
+<section class="apps-hero">
+<h1>APPS</h1>
+<div aria-label="music tool filters" class="tool-filters">
+<button class="filter-pill is-active" data-filter="all" type="button">
+                        all
+                    </button>
+<button class="filter-pill" data-filter="ear-training" type="button">
+                        ear training
+                    </button>
+<button class="filter-pill" data-filter="instruments" type="button">
+                        instruments
+                    </button>
+<button class="filter-pill" data-filter="drum-machines" type="button">
+                        drum machines
+                    </button>
+<button class="filter-pill" data-filter="theory" type="button">
+                        theory
+                    </button>
+<button class="filter-pill" data-filter="experimental" type="button">
+                        experimental
+                    </button>
+</div>
+</section>
+<section class="apps-shell">
+<div class="mobile-apps-note">built for desktop</div>
+<div class="apps-grid"><article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open nippon" class="tool-card-media-link" href="#"><img alt="nippon" data-autotrim="true" loading="lazy" src="assets/images/apps/web/nippon.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open nippon" class="tool-title-link" href="#"><h3>nippon</h3></a>
+<p class="tool-desc">
+                                playful Japanese-inspired instrument for
+                                sketching melodies and expressive musical
+                                textures.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open arturito" class="tool-card-media-link" href="#"><img alt="arturito" data-autotrim="true" loading="lazy" src="assets/images/apps/web/arturito.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open arturito" class="tool-title-link" href="#"><h3>arturito</h3></a>
+<p class="tool-desc">
+                                character-driven instrument experience built for
+                                playful interaction and quick musical
+                                exploration.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-live" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open okinori" class="tool-card-media-link" href="apps/okinori/"><img alt="okinori" data-autotrim="true" loading="lazy" src="assets/images/apps/web/okinori.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status"><span class="tool-status-dot"></span>live now</div>
+<a aria-label="Open okinori" class="tool-title-link" href="apps/okinori/"><h3>okinori</h3></a>
+<p class="tool-desc">
+                                expressive instrument experience blending
+                                playful controls with immediate melodic
+                                feedback.
+                            </p>
+<a class="tool-link" href="apps/okinori/">launch app</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="experimental">
+<div class="tool-card-media">
+
+<a aria-label="Open grid generator" class="tool-card-media-link" href="#"><img alt="grid generator" data-autotrim="true" loading="lazy" src="assets/images/apps/web/gridgenerator.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open grid generator" class="tool-title-link" href="#"><h3>grid generator</h3></a>
+<p class="tool-desc">
+                                visual composition tool for creating structured
+                                musical patterns through grid-based interaction.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open dreammaker" class="tool-card-media-link" href="#"><img alt="dreammaker" data-autotrim="true" loading="lazy" src="assets/images/apps/web/dreammaker.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open dreammaker" class="tool-title-link" href="#"><h3>dreammaker</h3></a>
+<p class="tool-desc">
+                                dreamy music sketchpad for building soft
+                                melodies and atmospheric sound ideas.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="ear-training">
+<div class="tool-card-media">
+
+<a aria-label="Open japanese arp tracker" class="tool-card-media-link" href="#"><img alt="japanese arp tracker" data-autotrim="true" loading="lazy" src="assets/images/apps/web/japanesearptracker.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open japanese arp tracker" class="tool-title-link" href="#"><h3>japanese arp tracker</h3></a>
+<p class="tool-desc">
+                                arp-driven tracker for exploring repeating note
+                                patterns, timing, and melodic motion.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="experimental">
+<div class="tool-card-media">
+
+<a aria-label="Open sound explorer 98" class="tool-card-media-link" href="#"><img alt="sound explorer 98" data-autotrim="true" loading="lazy" src="assets/images/apps/web/soundexplorer98.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open sound explorer 98" class="tool-title-link" href="#"><h3>sound explorer 98</h3></a>
+<p class="tool-desc">
+                                experimental browser instrument for discovering
+                                strange tones, textures, and sonic surprises.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open rosita" class="tool-card-media-link" href="#"><img alt="rosita" data-autotrim="true" loading="lazy" src="assets/images/apps/web/rosita.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open rosita" class="tool-title-link" href="#"><h3>rosita</h3></a>
+<p class="tool-desc">
+                                lightweight creative tool for sketching melodic
+                                ideas in a warm, approachable interface.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open melodic delyzr" class="tool-card-media-link" href="#"><img alt="melodic delyzr" data-autotrim="true" loading="lazy" src="assets/images/apps/web/melodicdelyzr.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open melodic delyzr" class="tool-title-link" href="#"><h3>melodic delyzr</h3></a>
+<p class="tool-desc">
+                                melody-focused tool for testing phrases,
+                                patterns, and musical ideas with quick feedback.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="ear-training theory">
+<div class="tool-card-media">
+
+<a aria-label="Open interval trainer" class="tool-card-media-link" href="#"><img alt="interval trainer" data-autotrim="true" loading="lazy" src="assets/images/apps/web/intervaltrainer.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open interval trainer" class="tool-title-link" href="#"><h3>interval trainer</h3></a>
+<p class="tool-desc">
+                                ear training tool for sharpening interval
+                                recognition with instant musical feedback.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open harmonic melodizer" class="tool-card-media-link" href="#"><img alt="harmonic melodizer" data-autotrim="true" loading="lazy" src="assets/images/apps/web/harmonicmelodizer.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open harmonic melodizer" class="tool-title-link" href="#"><h3>harmonic melodizer</h3></a>
+<p class="tool-desc">
+                                melody builder for exploring harmony, movement,
+                                and layered musical ideas in real time.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="ear-training theory">
+<div class="tool-card-media">
+
+<a aria-label="Open jazz progressor" class="tool-card-media-link" href="#"><img alt="jazz progressor" data-autotrim="true" loading="lazy" src="assets/images/apps/web/jazzprogressor.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open jazz progressor" class="tool-title-link" href="#"><h3>jazz progressor</h3></a>
+<p class="tool-desc">
+                                progression trainer for practicing jazz harmony,
+                                movement, and chord relationships by ear.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="experimental">
+<div class="tool-card-media">
+
+<a aria-label="Open grid generator mini" class="tool-card-media-link" href="#"><img alt="grid generator mini" data-autotrim="true" loading="lazy" src="assets/images/apps/web/gridgeneratormini.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open grid generator mini" class="tool-title-link" href="#"><h3>grid generator mini</h3></a>
+<p class="tool-desc">
+                                compact pattern generator for building quick
+                                rhythmic and melodic ideas from a simple grid.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open chipboi" class="tool-card-media-link" href="#"><img alt="chipboi" data-autotrim="true" loading="lazy" src="assets/images/apps/web/chipboi.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open chipboi" class="tool-title-link" href="#"><h3>chipboi</h3></a>
+<p class="tool-desc">
+                                retro-inspired sequencer with punchy chip sounds
+                                and hands-on step-based pattern control.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open jazzy blops" class="tool-card-media-link" href="#"><img alt="jazzy blops" data-autotrim="true" loading="lazy" src="assets/images/apps/web/jazzyblops.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open jazzy blops" class="tool-title-link" href="#"><h3>jazzy blops</h3></a>
+<p class="tool-desc">
+                                colorful sound toy for playful melodic ideas,
+                                soft textures, and quick experimentation.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open playa" class="tool-card-media-link" href="#"><img alt="playa" data-autotrim="true" loading="lazy" src="assets/images/apps/web/playa.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open playa" class="tool-title-link" href="#"><h3>playa</h3></a>
+<p class="tool-desc">
+                                laid-back music maker for building relaxed
+                                grooves and simple melodic loops fast.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="drum-machines">
+<div class="tool-card-media">
+
+<a aria-label="Open pocket beats" class="tool-card-media-link" href="#"><img alt="pocket beats" data-autotrim="true" loading="lazy" src="assets/images/apps/web/pocketbeats.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open pocket beats" class="tool-title-link" href="#"><h3>pocket beats</h3></a>
+<p class="tool-desc">
+                                compact drum machine for building beats, loops,
+                                and rhythmic ideas in a simple interface.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open colombianita" class="tool-card-media-link" href="#"><img alt="colombianita" data-autotrim="true" loading="lazy" src="assets/images/apps/web/colombianita.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open colombianita" class="tool-title-link" href="#"><h3>colombianita</h3></a>
+<p class="tool-desc">
+                                bright instrument concept inspired by playful
+                                rhythms, melody, and colorful musical
+                                interaction.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="experimental">
+<div class="tool-card-media">
+
+<a aria-label="Open 8bit cubed" class="tool-card-media-link" href="#"><img alt="8bit cubed" data-autotrim="true" loading="lazy" src="assets/images/apps/web/8bitcubed.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open 8bit cubed" class="tool-title-link" href="#"><h3>8bit cubed</h3></a>
+<p class="tool-desc">
+                                experimental 8-bit inspired sound playground for
+                                bold textures, patterns, and retro energy.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+<article class="card tool-card is-disabled" data-category="instruments">
+<div class="tool-card-media">
+
+<a aria-label="Open genwii tracker" class="tool-card-media-link" href="#"><img alt="genwii tracker" data-autotrim="true" loading="lazy" src="assets/images/apps/web/genwiitracker.png"/></a></div>
+<div class="tool-card-copy">
+<div class="tool-status">coming soon</div>
+<a aria-label="Open genwii tracker" class="tool-title-link" href="#"><h3>genwii tracker</h3></a>
+<p class="tool-desc">
+                                tracker-style music maker for sequencing notes,
+                                shaping grooves, and testing ideas fast.
+                            </p>
+<a class="tool-link" href="#">coming soon</a>
+</div>
+</article>
+</div>
+</section>
+</main>
+<script src="assets/js/site.js"></script>
+<script>
+            const filterButtons = document.querySelectorAll(".filter-pill");
+            const toolCards = document.querySelectorAll(".tool-card");
+
+            filterButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    const filter = button.dataset.filter;
+                    filterButtons.forEach((btn) =>
+                        btn.classList.remove("is-active"),
+                    );
+                    button.classList.add("is-active");
+
+                    toolCards.forEach((card) => {
+                        const categories = (card.dataset.category || "").split(
+                            " ",
+                        );
+                        card.hidden = !(
+                            filter === "all" || categories.includes(filter)
+                        );
+                    });
+                });
+            });
+
+            function trimImageWhitespace(img) {
+                if (img.dataset.trimmed === "done") return;
+                const sourceWidth = img.naturalWidth;
+                const sourceHeight = img.naturalHeight;
+                if (!sourceWidth || !sourceHeight) return;
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d", {
+                    willReadFrequently: true,
+                });
+                canvas.width = sourceWidth;
+                canvas.height = sourceHeight;
+                ctx.drawImage(img, 0, 0);
+
+                const { data, width, height } = ctx.getImageData(
+                    0,
+                    0,
+                    sourceWidth,
+                    sourceHeight,
+                );
+
+                function samplePixel(x, y) {
+                    const i = (y * width + x) * 4;
+                    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+                }
+
+                const samples = [];
+                const edgeStep = Math.max(
+                    6,
+                    Math.floor(Math.min(width, height) / 30),
+                );
+                for (let x = 0; x < width; x += edgeStep) {
+                    samples.push(samplePixel(x, 0));
+                    samples.push(samplePixel(x, height - 1));
+                }
+                for (let y = 0; y < height; y += edgeStep) {
+                    samples.push(samplePixel(0, y));
+                    samples.push(samplePixel(width - 1, y));
+                }
+
+                const bg = samples
+                    .reduce(
+                        (acc, px) => {
+                            acc[0] += px[0];
+                            acc[1] += px[1];
+                            acc[2] += px[2];
+                            acc[3] += px[3];
+                            return acc;
+                        },
+                        [0, 0, 0, 0],
+                    )
+                    .map((v) => v / samples.length);
+
+                function differsEnough(x, y) {
+                    const i = (y * width + x) * 4;
+                    const a = data[i + 3];
+                    if (a < 16) return false;
+                    const dr = data[i] - bg[0];
+                    const dg = data[i + 1] - bg[1];
+                    const db = data[i + 2] - bg[2];
+                    const da = a - bg[3];
+                    const distance = Math.sqrt(
+                        dr * dr + dg * dg + db * db + da * da * 0.35,
+                    );
+                    return distance > 26;
+                }
+
+                let top = 0;
+                let bottom = height - 1;
+                let left = 0;
+                let right = width - 1;
+
+                let found = false;
+                for (let y = 0; y < height && !found; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (differsEnough(x, y)) {
+                            top = y;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                found = false;
+                for (let y = height - 1; y >= 0 && !found; y--) {
+                    for (let x = 0; x < width; x++) {
+                        if (differsEnough(x, y)) {
+                            bottom = y;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                found = false;
+                for (let x = 0; x < width && !found; x++) {
+                    for (let y = 0; y < height; y++) {
+                        if (differsEnough(x, y)) {
+                            left = x;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                found = false;
+                for (let x = width - 1; x >= 0 && !found; x--) {
+                    for (let y = 0; y < height; y++) {
+                        if (differsEnough(x, y)) {
+                            right = x;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                const croppedWidth = right - left + 1;
+                const croppedHeight = bottom - top + 1;
+                if (croppedWidth <= 0 || croppedHeight <= 0) return;
+
+                const widthSaved = 1 - croppedWidth / width;
+                const heightSaved = 1 - croppedHeight / height;
+                if (widthSaved < 0.03 && heightSaved < 0.03) {
+                    img.dataset.trimmed = "done";
+                    return;
+                }
+
+                const padX = Math.max(6, Math.round(croppedWidth * 0.02));
+                const padY = Math.max(6, Math.round(croppedHeight * 0.02));
+                left = Math.max(0, left - padX);
+                top = Math.max(0, top - padY);
+                right = Math.min(width - 1, right + padX);
+                bottom = Math.min(height - 1, bottom + padY);
+
+                const finalWidth = right - left + 1;
+                const finalHeight = bottom - top + 1;
+                const out = document.createElement("canvas");
+                out.width = finalWidth;
+                out.height = finalHeight;
+                out.getContext("2d").drawImage(
+                    canvas,
+                    left,
+                    top,
+                    finalWidth,
+                    finalHeight,
+                    0,
+                    0,
+                    finalWidth,
+                    finalHeight,
+                );
+
+                img.src = out.toDataURL("image/png");
+                img.dataset.trimmed = "done";
+            }
+
+            document
+                .querySelectorAll('img[data-autotrim="true"]')
+                .forEach((img) => {
+                    if (img.complete) trimImageWhitespace(img);
+                    else
+                        img.addEventListener(
+                            "load",
+                            () => trimImageWhitespace(img),
+                            { once: true },
+                        );
+                });
+        </script>
+</body>
+</html>

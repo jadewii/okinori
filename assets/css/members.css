@@ -1,0 +1,4 @@
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.metric{padding:20px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.metric strong{display:block;font-size:1.8rem}
+@media (max-width: 900px){.metric-grid{grid-template-columns:1fr}}
